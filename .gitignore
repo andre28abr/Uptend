@@ -1,0 +1,12 @@
+# Build
+.build/
+build/
+*.iconset
+
+# macOS
+.DS_Store
+
+# Xcode
+*.xcuserstate
+xcuserdata/
+.swiftpm/
