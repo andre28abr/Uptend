@@ -71,8 +71,17 @@ cat > "${APP_DIR}/Contents/Info.plist" <<PLIST
 </plist>
 PLIST
 
-echo "==> Assinando localmente (ad-hoc)..."
-codesign --force --sign - "${APP_DIR}" >/dev/null 2>&1 || true
+# Assinatura ESTÁVEL: se existir o certificado local "Uptend Dev", assina com ele
+# (a assinatura fica igual entre builds → o "Sempre Permitir" do Keychain gruda e o
+# app para de pedir a senha toda vez). Sem o certificado, cai no ad-hoc de sempre.
+SIGN_ID="Uptend Dev"
+if security find-identity -p codesigning 2>/dev/null | grep -q "$SIGN_ID"; then
+    echo "==> Assinando com o certificado '${SIGN_ID}' (estável)..."
+    codesign --force --deep --sign "$SIGN_ID" "${APP_DIR}" >/dev/null 2>&1 || true
+else
+    echo "==> Assinando localmente (ad-hoc)..."
+    codesign --force --sign - "${APP_DIR}" >/dev/null 2>&1 || true
+fi
 
 if [[ "${OPEN_APP}" == "1" ]]; then
     echo "==> Abrindo ${APP_NAME}..."
