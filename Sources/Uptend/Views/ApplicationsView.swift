@@ -4,6 +4,10 @@ import AppKit
 struct ApplicationsView: View {
     let sub: SubSection?
     @EnvironmentObject var apps: AppsService
+    @EnvironmentObject var state: AppState
+    @EnvironmentObject var brew: BrewService
+    @EnvironmentObject var providers: TapProvidersStore
+    @EnvironmentObject var github: GitHubService
 
     @State private var filter = ""
     @State private var sortBySize = false
@@ -34,6 +38,32 @@ struct ApplicationsView: View {
                     }
                 }
 
+                CardRow {
+                    HStack(spacing: 10) {
+                        Image(systemName: "info.circle").foregroundStyle(.blue)
+                        Text("Esta seção **gerencia e desinstala** apps já instalados. Para instalar um app novo, use o Homebrew.")
+                            .font(.callout).foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                } trailing: {
+                    Button("Ir para Homebrew") {
+                        state.category = .homebrew
+                        state.subID = "essentials"
+                    }
+                }
+
+                if let error = apps.lastError {
+                    CardRow {
+                        HStack(spacing: 10) {
+                            Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.orange)
+                            Text(error).font(.callout).foregroundStyle(.secondary)
+                                .fixedSize(horizontal: false, vertical: true).textSelection(.enabled)
+                        }
+                    } trailing: {
+                        IconButton(systemImage: "xmark", help: "Dispensar") { apps.lastError = nil }
+                    }
+                }
+
                 HStack(spacing: 8) {
                     Image(systemName: "magnifyingglass").foregroundStyle(.secondary)
                     TextField("Filtrar apps…", text: $filter).textFieldStyle(.plain)
@@ -58,6 +88,9 @@ struct ApplicationsView: View {
         .task {
             if apps.apps.isEmpty { await apps.scan() }
         }
+        .task(id: "\(providers.allPrograms.count)-\(brew.installedCasks.count)") {
+            await brew.indexThirdPartyApps(providers.allPrograms)
+        }
         .confirmationDialog(
             "Desinstalar \(toUninstall?.name ?? "")?",
             isPresented: Binding(get: { toUninstall != nil }, set: { if !$0 { toUninstall = nil } }),
@@ -74,7 +107,8 @@ struct ApplicationsView: View {
             if let app = toUninstall {
                 let extras = apps.residualURLs(for: app).count
                 Text("O app vai para a Lixeira (reversível)."
-                     + (includeResiduals && extras > 0 ? " Junto com \(extras) arquivo(s) de configuração/cache." : ""))
+                     + (includeResiduals && extras > 0 ? " Junto com \(extras) arquivo(s) de configuração/cache." : "")
+                     + (app.ownerIsRoot ? " Este app pertence ao sistema — o macOS vai pedir sua senha de administrador." : ""))
             }
         }
     }
@@ -85,7 +119,12 @@ struct ApplicationsView: View {
                 Image(nsImage: NSWorkspace.shared.icon(forFile: app.path.path))
                     .resizable().frame(width: 32, height: 32)
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(app.name).fontWeight(.medium)
+                    HStack(spacing: 6) {
+                        Text(app.name).fontWeight(.medium)
+                        if let owner = brew.thirdPartyApps[BrewService.normalizeAppName(app.name)] {
+                            TapOriginBadge(owner: owner, myLogin: github.account?.login)
+                        }
+                    }
                     HStack(spacing: 6) {
                         Image(systemName: app.origin.systemImage).font(.caption2)
                         Text(app.origin.label)

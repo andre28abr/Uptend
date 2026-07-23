@@ -18,8 +18,8 @@ struct ToolsView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
                 switch sub?.id {
+                case "runtimes": RuntimesToolView()
                 case "qr": QRToolView()
-                case "ports": PortsToolView()
                 case "ssh": SSHToolView()
                 case "clipboard": ClipboardToolView()
                 default: ConvertersToolView()
@@ -190,6 +190,7 @@ struct PortsToolView: View {
 
 struct SSHToolView: View {
     @StateObject private var service = SSHService()
+    @EnvironmentObject var github: GitHubService
     @State private var name = "id_ed25519"
     @State private var comment = ""
 
@@ -202,6 +203,9 @@ struct SSHToolView: View {
             if let message = service.message {
                 Text(message).font(.callout).foregroundStyle(.secondary)
             }
+            if let error = github.lastError {
+                ErrorBanner(error) { github.lastError = nil }
+            }
 
             ForEach(service.keys) { key in
                 CardRow {
@@ -211,6 +215,11 @@ struct SSHToolView: View {
                             .foregroundStyle(.secondary).lineLimit(1).truncationMode(.middle)
                     }
                 } trailing: {
+                    if github.isConnected {
+                        IconButton(systemImage: "arrow.up.circle", help: "Enviar esta chave para o seu GitHub") {
+                            Task { await github.uploadSSHKey(key.publicKey, title: "Uptend — \(key.name)") }
+                        }
+                    }
                     IconButton(systemImage: "doc.on.doc", help: "Copiar chave pública") { Clipboard.copy(key.publicKey) }
                 }
             }

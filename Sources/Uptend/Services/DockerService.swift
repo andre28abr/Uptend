@@ -29,14 +29,48 @@ struct DockerNetworkInfo: Identifiable, Hashable {
     let driver: String
 }
 
-/// Pilota o Docker instalado (OrbStack, Docker Desktop, etc.) por linha de comando,
-/// mostrando tudo em interface gráfica. Não substitui o Docker.
+/// Um "motor de containers" que o usuário pode ter instalado (a caixinha que roda o Linux).
+struct ContainerEngine: Identifiable, Hashable {
+    let id: String
+    let name: String
+    let systemImage: String
+    let appName: String?       // se for um app (aberto com "open -a")
+    let binaryName: String?    // se for CLI (colima/podman)
+    let startArgs: [String]    // argumentos do comando de iniciar (CLI)
+
+    var isApp: Bool { appName != nil }
+
+    var isInstalled: Bool {
+        if let appName { return FileManager.default.fileExists(atPath: "/Applications/\(appName).app") }
+        if let binaryName { return DockerService.binaryPath(binaryName) != nil }
+        return false
+    }
+
+    /// Todos os motores que o Uptend sabe reconhecer.
+    static let all: [ContainerEngine] = [
+        ContainerEngine(id: "orbstack", name: "OrbStack", systemImage: "cube.transparent",
+                        appName: "OrbStack", binaryName: nil, startArgs: []),
+        ContainerEngine(id: "docker-desktop", name: "Docker Desktop", systemImage: "shippingbox",
+                        appName: "Docker", binaryName: nil, startArgs: []),
+        ContainerEngine(id: "rancher", name: "Rancher Desktop", systemImage: "shippingbox",
+                        appName: "Rancher Desktop", binaryName: nil, startArgs: []),
+        ContainerEngine(id: "colima", name: "Colima", systemImage: "terminal",
+                        appName: nil, binaryName: "colima", startArgs: ["start"]),
+        ContainerEngine(id: "podman", name: "Podman", systemImage: "terminal",
+                        appName: nil, binaryName: "podman", startArgs: ["machine", "start"]),
+    ]
+}
+
+/// Pilota o motor de containers instalado (OrbStack, Docker Desktop, Rancher, Colima,
+/// Podman) por linha de comando, mostrando tudo em interface gráfica. Não substitui o motor.
 @MainActor
 final class DockerService: ObservableObject {
     @Published var installed = false
     @Published var daemonRunning = false
     @Published var provider = "Docker"
     @Published var loading = false
+    @Published var starting = false
+    @Published var engines: [ContainerEngine] = []
 
     @Published var containers: [DockerContainerInfo] = []
     @Published var images: [DockerImageInfo] = []
@@ -45,6 +79,14 @@ final class DockerService: ObservableObject {
 
     private var dockerPath = "/usr/local/bin/docker"
     private var didBootstrap = false
+
+    nonisolated static func binaryPath(_ name: String) -> String? {
+        for dir in ["/opt/homebrew/bin", "/usr/local/bin"] {
+            let path = dir + "/" + name
+            if FileManager.default.isExecutableFile(atPath: path) { return path }
+        }
+        return nil
+    }
 
     func bootstrapIfNeeded() async {
         guard !didBootstrap else { return }
@@ -70,11 +112,27 @@ final class DockerService: ObservableObject {
             break
         }
 
-        provider = FileManager.default.fileExists(atPath: "/Applications/OrbStack.app") ? "OrbStack" : "Docker"
+        // Motores de containers instalados (a "caixinha" que roda os containers).
+        engines = ContainerEngine.all.filter { $0.isInstalled }
+        provider = engines.first?.name ?? "Docker"
 
         guard installed else { daemonRunning = false; return }
         let info = await Shell.capture(dockerPath, ["info", "--format", "{{.ServerVersion}}"], env: Shell.brewEnv)
         daemonRunning = info.ok && !info.stdout.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
+    /// Abre (app) ou inicia (CLI) um motor de containers.
+    func startEngine(_ engine: ContainerEngine) {
+        if let appName = engine.appName {
+            Task { _ = await Shell.capture("/usr/bin/open", ["-a", appName]) }
+        } else if let binary = engine.binaryName, let path = Self.binaryPath(binary) {
+            Task {
+                starting = true
+                _ = await Shell.capture(path, engine.startArgs, env: Shell.brewEnv)
+                await reload()
+                starting = false
+            }
+        }
     }
 
     func refreshAll() async {
@@ -108,10 +166,6 @@ final class DockerService: ObservableObject {
         guard args.allSatisfy({ InputValidator.isSafeArgument($0) }) else { return }
         _ = await Shell.capture(dockerPath, args, env: Shell.brewEnv)
         await refreshAll()
-    }
-
-    func openApp() {
-        Task { _ = await Shell.capture("/usr/bin/open", ["-a", provider]) }
     }
 
     // MARK: Parsing (puro, testável)

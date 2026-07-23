@@ -65,17 +65,21 @@ final class DotfilesService: ObservableObject {
 
         guard fm.fileExists(atPath: src.path) else { message = "Arquivo não encontrado na origem."; return }
 
+        var backedUp = false
         if fm.fileExists(atPath: dest.path) {
             let backup = home.appendingPathComponent(item.name + ".uptend.bak")
             try? fm.removeItem(at: backup)
-            try? fm.moveItem(at: dest, to: backup)
+            do { try fm.moveItem(at: dest, to: backup); backedUp = true } catch {}
         }
         do {
             try fm.copyItem(at: src, to: dest)
             message = "\(item.name) restaurado (backup em \(item.name).uptend.bak)."
             ActionLog.shared.record("Dotfile restaurado: \(item.name)")
         } catch {
-            message = "Falha ao restaurar \(item.name)."
+            // Se já movemos o original para .bak, avisamos como recuperá-lo.
+            message = backedUp
+                ? "Falha ao restaurar \(item.name). Seu arquivo original está salvo como \(item.name).uptend.bak — renomeie de volta para recuperá-lo."
+                : "Falha ao restaurar \(item.name)."
         }
         scan()
     }

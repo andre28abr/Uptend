@@ -5,45 +5,13 @@ struct DashboardView: View {
     @EnvironmentObject var brew: BrewService
     @EnvironmentObject var state: AppState
     @EnvironmentObject var schedule: ScheduleService
-    @ObservedObject private var log = ActionLog.shared
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
-                switch sub?.id {
-                case "health": healthContent
-                case "activity": activityContent
-                default: overviewContent
-                }
+                overviewContent
             }
             .screenPadding()
-        }
-    }
-
-    private var activityContent: some View {
-        Group {
-            ScreenHeader(title: "Atividade", subtitle: "\(log.entries.count) ações registradas") {
-                IconButton(systemImage: "trash", help: "Limpar histórico") { log.clear() }
-            }
-
-            if log.entries.isEmpty {
-                ContentUnavailableView("Nada registrado ainda", systemImage: "clock.arrow.circlepath")
-                    .padding(.top, 40)
-            } else {
-                VStack(spacing: 8) {
-                    ForEach(log.entries) { entry in
-                        CardRow {
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(entry.text).fontWeight(.medium)
-                                Text(entry.date.formatted(date: .abbreviated, time: .shortened))
-                                    .font(.caption).foregroundStyle(.secondary)
-                            }
-                        } trailing: {
-                            EmptyView()
-                        }
-                    }
-                }
-            }
         }
     }
 
@@ -81,47 +49,23 @@ struct DashboardView: View {
             }
 
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 200), spacing: 12)], spacing: 12) {
-                StatCard(title: "Pacotes instalados (brew)", value: "\(brew.installedCount)", systemImage: "app.badge.checkmark", tint: .blue)
-                StatCard(title: "Atualizações pendentes", value: "\(brew.outdated.count)", systemImage: "arrow.triangle.2.circlepath", tint: .orange)
-                StatCard(title: "Repositórios fora de sincronia", value: "2", systemImage: "arrow.triangle.branch", tint: .yellow)
-                StatCard(title: "Espaço livre", value: Self.freeDisk(), systemImage: "internaldrive", tint: .green)
+                StatCard(title: "Pacotes instalados (brew)", value: "\(brew.installedCount)", systemImage: "app.badge.checkmark", tint: .blue,
+                         help: "Total de fórmulas e casks instalados pelo Homebrew.")
+                StatCard(title: "Atualizações pendentes", value: "\(brew.outdated.count)", systemImage: "arrow.triangle.2.circlepath", tint: .orange,
+                         help: "Pacotes do Homebrew com uma versão mais nova disponível.")
+                StatCard(title: "Repositórios fora de sincronia", value: "2", systemImage: "arrow.triangle.branch", tint: .yellow,
+                         help: "Repositórios Git monitorados que estão à frente ou atrás do GitHub.")
+                StatCard(title: "Espaço livre", value: Self.freeDisk(), systemImage: "internaldrive", tint: .green,
+                         help: "Espaço disponível no disco de inicialização do Mac.")
             }
 
-            Text("Ações rápidas")
+            Text("Homebrew")
                 .font(.headline)
                 .padding(.top, 4)
 
-            VStack(spacing: 8) {
-                quickAction("Atualizar tudo do Homebrew", systemImage: "arrow.triangle.2.circlepath") {
-                    Task { await brew.updateAndUpgradeAll() }
-                }
-                quickAction("Verificar atualizações", systemImage: "arrow.clockwise") {
-                    Task { await brew.refreshAll() }
-                }
-            }
-        }
-    }
-
-    private var healthContent: some View {
-        Group {
-            ScreenHeader(title: "Saúde do sistema", subtitle: "Verificações rápidas do estado do Mac") {
-                IconButton(systemImage: "arrow.clockwise", help: "Rodar verificações")
-            }
-
-            VStack(spacing: 8) {
-                healthRow("Homebrew", detail: brew.detected ? "Instalado e funcionando" : "Não encontrado", status: brew.detected ? .ok : .warning)
-                healthRow("Atualizações do Homebrew", detail: brew.outdated.isEmpty ? "Tudo atualizado" : "\(brew.outdated.count) pendentes", status: brew.outdated.isEmpty ? .ok : .warning)
-                healthRow("Espaço em disco", detail: "\(Self.freeDisk()) livres", status: .ok)
-                healthRow("Itens de inicialização", detail: "7 apps abrindo no login", status: .warning)
-            }
-        }
-    }
-
-    private func quickAction(_ title: String, systemImage: String, action: @escaping () -> Void) -> some View {
-        CardRow {
-            Label(title, systemImage: systemImage)
-        } trailing: {
-            IconButton(systemImage: "play.fill", help: "Executar", action: action)
+            healthRow("Homebrew",
+                      detail: brew.detected ? "Instalado e funcionando" : "Não encontrado",
+                      status: brew.detected ? .ok : .warning)
         }
     }
 

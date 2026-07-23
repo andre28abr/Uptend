@@ -6,19 +6,28 @@ struct SecurityView: View {
     @EnvironmentObject var security: SecurityService
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
-                switch sub?.id {
-                case "passwords": PasswordGeneratorCard()
-                case "hash": HashToolCard()
-                default: statusContent
+        switch sub?.id {
+        case "antivirus": ClamAVView()
+        case "exposure": ExposureView()
+        case "secrets": SecretScanView()
+        case "audit": AuditView()
+        case "deps": DepsScanView()
+        case "verify": AppCheckView()
+        default:
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+                    switch sub?.id {
+                    case "passwords": PasswordGeneratorCard()
+                    case "hash": HashToolCard()
+                    default: statusContent
+                    }
                 }
+                .screenPadding()
+                .frame(maxWidth: 860, alignment: .leading)
             }
-            .screenPadding()
-            .frame(maxWidth: 860, alignment: .leading)
-        }
-        .task {
-            if security.checks.isEmpty { await security.refresh() }
+            .task {
+                if security.checks.isEmpty { await security.refresh() }
+            }
         }
     }
 

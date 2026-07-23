@@ -10,12 +10,10 @@ struct DockerView: View {
 
     var body: some View {
         Group {
-            if !docker.installed {
-                missing
-            } else if !docker.daemonRunning {
-                notRunning
-            } else {
+            if docker.daemonRunning {
                 content
+            } else {
+                engineScreen
             }
         }
         .task { await docker.bootstrapIfNeeded() }
@@ -24,31 +22,76 @@ struct DockerView: View {
         }
     }
 
-    // MARK: Estados
+    // MARK: Tela do motor (didática)
 
-    private var missing: some View {
-        ContentUnavailableView {
-            Label("Docker não encontrado", systemImage: "shippingbox")
-        } description: {
-            Text("Instale o Docker (ou OrbStack) para gerenciar containers pelo Uptend.")
-        } actions: {
-            Button("Instalar Docker via Homebrew") {
-                Task { await brew.installToken("docker", isCask: true) }
+    private var engineScreen: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                ScreenHeader(title: "Docker", subtitle: "O motor de containers não está ativo") {
+                    if docker.starting || docker.loading { ProgressView().controlSize(.small) }
+                    IconButton(systemImage: "arrow.clockwise", help: "Verificar novamente") {
+                        Task { await docker.reload() }
+                    }
+                }
+
+                explanationCard
+
+                if docker.engines.isEmpty {
+                    noEngineCard
+                } else {
+                    Text("Motores detectados").font(.headline).padding(.top, 4)
+                    ForEach(docker.engines) { engine in
+                        CardRow {
+                            HStack(spacing: 12) {
+                                Image(systemName: engine.systemImage).foregroundStyle(.secondary)
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(engine.name).fontWeight(.medium)
+                                    Text(engine.isApp ? "Aplicativo" : "Linha de comando")
+                                        .font(.caption).foregroundStyle(.secondary)
+                                }
+                            }
+                        } trailing: {
+                            Button(engine.isApp ? "Abrir" : "Iniciar") { docker.startEngine(engine) }
+                                .disabled(docker.starting)
+                        }
+                    }
+                    Text("Depois de abrir/iniciar o motor, aguarde alguns segundos e toque em \"Verificar novamente\".")
+                        .font(.caption).foregroundStyle(.secondary)
+                }
             }
+            .screenPadding()
+            .frame(maxWidth: 860, alignment: .leading)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
-    private var notRunning: some View {
-        ContentUnavailableView {
-            Label("\(docker.provider) não está rodando", systemImage: "pause.circle")
-        } description: {
-            Text("O Docker está instalado, mas o serviço não está ativo. Abra o \(docker.provider) para continuar.")
-        } actions: {
-            Button("Abrir \(docker.provider)") { docker.openApp() }
-            Button("Verificar novamente") { Task { await docker.reload() } }
+    private var explanationCard: some View {
+        CardRow {
+            HStack(alignment: .top, spacing: 12) {
+                Image(systemName: "lightbulb").foregroundStyle(.yellow)
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Como funciona").fontWeight(.medium)
+                    Text("No Mac, containers rodam dentro de um \"motor\" (uma pequena máquina Linux). Apps como OrbStack, Docker Desktop, Rancher, Colima ou Podman fornecem esse motor. Seus containers ficam guardados dentro dele — quando o motor está desligado, eles existem em disco, mas não podem ser listados. O Uptend não substitui o motor: ele o pilota. Ligue um motor abaixo para ver seus containers.")
+                        .font(.callout).foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+        } trailing: {
+            EmptyView()
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    private var noEngineCard: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            ContentUnavailableView {
+                Label("Nenhum motor de containers instalado", systemImage: "shippingbox")
+            } description: {
+                Text("Instale um motor para começar. O OrbStack é leve e recomendado.")
+            } actions: {
+                Button("Instalar OrbStack via Homebrew") {
+                    Task { await brew.installToken("orbstack", isCask: true) }
+                }
+            }
+        }
     }
 
     private var content: some View {

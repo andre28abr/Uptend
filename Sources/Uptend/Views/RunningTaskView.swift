@@ -33,11 +33,43 @@ struct RunningTaskView: View {
                 }
             }
 
+            if brew.needsTerminal {
+                HStack(spacing: 8) {
+                    Image(systemName: "lock.fill").foregroundStyle(.orange)
+                    Text("Isto precisa de senha de administrador — o Uptend não pode fornecer sozinho.")
+                        .font(.callout).foregroundStyle(.secondary)
+                }
+            }
+
+            if brew.needsTrust {
+                HStack(spacing: 8) {
+                    Image(systemName: "hand.raised.fill").foregroundStyle(.orange)
+                    Text("Esta é uma fonte de terceiros. Confirme que confia nela para instalar.")
+                        .font(.callout).foregroundStyle(.secondary)
+                }
+            }
+
             HStack {
                 if brew.runningBusy {
                     Text("Executando…").foregroundStyle(.secondary).font(.callout)
                 }
                 Spacer()
+                if brew.needsTerminal {
+                    Button {
+                        brew.openLastInTerminal()
+                        brew.dismissRunning()
+                    } label: {
+                        Label("Abrir no Terminal", systemImage: "terminal")
+                    }
+                }
+                if brew.needsTrust {
+                    Button {
+                        Task { await brew.trustAndRetry() }
+                    } label: {
+                        Label("Confiar e instalar", systemImage: "checkmark.shield")
+                    }
+                    .disabled(brew.runningBusy)
+                }
                 Button("Fechar") { brew.dismissRunning() }
                     .keyboardShortcut(.defaultAction)
                     .disabled(brew.runningBusy)

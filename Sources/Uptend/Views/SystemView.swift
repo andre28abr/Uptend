@@ -10,8 +10,10 @@ struct SystemView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
                 switch sub?.id {
+                case "health": HealthView()
                 case "login": loginContent
                 case "toggles": togglesContent
+                case "focus": FocusView()
                 default: infoContent
                 }
             }
