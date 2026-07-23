@@ -1464,13 +1464,19 @@ struct AuditReportsView: View {
         VStack(alignment: .leading, spacing: 8) {
             Toggle(isOn: $signReports) { Label("Assinar digitalmente os relatórios", systemImage: "signature").font(.headline) }
                 .toggleStyle(.switch)
-            Text("Assinatura ECDSA P-256 (cadeia de custódia). Impressão digital da sua chave: \(AuditSigner.fingerprint.prefix(16))…")
-                .font(.caption).foregroundStyle(.secondary).textSelection(.enabled)
             if signReports {
+                // A impressão digital só é calculada quando você ATIVA a assinatura —
+                // senão a tela leria a chave no Keychain à toa, disparando a senha do
+                // macOS sem necessidade.
+                Text("Assinatura ECDSA P-256 (cadeia de custódia). Impressão digital da sua chave: \(AuditSigner.fingerprint.prefix(16))…")
+                    .font(.caption).foregroundStyle(.secondary).textSelection(.enabled)
                 HStack {
                     Button { saveSignature() } label: { Label("Salvar assinatura (.sig)", systemImage: "square.and.arrow.down") }
                     Button { verifySignature() } label: { Label("Verificar .sig…", systemImage: "checkmark.seal") }
                 }
+            } else {
+                Text("Assinatura ECDSA P-256 (cadeia de custódia). Ative para assinar os relatórios com a sua chave.")
+                    .font(.caption).foregroundStyle(.secondary)
             }
         }
         .padding(14).frame(maxWidth: .infinity, alignment: .leading).cardBackground()
