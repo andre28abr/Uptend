@@ -44,8 +44,25 @@ struct SettingsView: View {
                 markDone: { schedule.markCleanupDone() }
             )
 
-            Text("O Uptend só lembra enquanto está aberto — não roda tarefas em segundo plano nesta versão.")
-                .font(.caption).foregroundStyle(.secondary).padding(.top, 4)
+            VStack(alignment: .leading, spacing: 10) {
+                HStack {
+                    Image(systemName: "bell.badge").foregroundStyle(.secondary)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Lembretes em segundo plano").fontWeight(.medium)
+                        Text("Instala um agente do sistema (launchd) que envia uma notificação no intervalo definido, mesmo com o app fechado.")
+                            .font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                    }
+                    Spacer()
+                    Toggle("", isOn: Binding(
+                        get: { schedule.backgroundReminders },
+                        set: { on in Task { await schedule.setBackgroundReminders(on) } }
+                    ))
+                    .toggleStyle(.switch).labelsHidden()
+                }
+            }
+            .padding(16)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .cardBackground()
         }
     }
 
@@ -111,11 +128,11 @@ struct SettingsView: View {
                         .foregroundStyle(Color.accentColor)
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Uptend").font(.title2).fontWeight(.medium)
-                        Text("Versão 0.1 · protótipo de interface").foregroundStyle(.secondary)
+                        Text("Versão 0.1").foregroundStyle(.secondary)
                     }
                 }
                 Divider()
-                Text("Central para instalar, atualizar, limpar e manter o seu Mac. Esta é uma prévia da interface com dados de exemplo.")
+                Text("Central para instalar, atualizar, limpar e manter o seu Mac — e gerenciar seus servidores e HomeLab via SSH.")
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             }

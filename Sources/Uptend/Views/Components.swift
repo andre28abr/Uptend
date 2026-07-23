@@ -42,7 +42,35 @@ struct IconButton: View {
                 .contentShape(Rectangle())
         }
         .buttonStyle(.borderless)
-        .help(help)
+        .tip(help)
+    }
+}
+
+// MARK: - Banner de erro padronizado
+
+/// Mensagem de erro consistente em todo o app (ícone laranja, texto selecionável,
+/// botão de dispensar opcional). Substitui os cartões de erro copiados em cada tela.
+struct ErrorBanner: View {
+    let message: String
+    var onDismiss: (() -> Void)?
+
+    init(_ message: String, onDismiss: (() -> Void)? = nil) {
+        self.message = message
+        self.onDismiss = onDismiss
+    }
+
+    var body: some View {
+        CardRow {
+            HStack(spacing: 10) {
+                Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.orange)
+                Text(message).font(.callout).foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true).textSelection(.enabled)
+            }
+        } trailing: {
+            if let onDismiss {
+                IconButton(systemImage: "xmark", help: "Dispensar", action: onDismiss)
+            }
+        }
     }
 }
 
@@ -62,6 +90,8 @@ struct StatCard: View {
     let value: String
     let systemImage: String
     var tint: Color = .secondary
+    /// Explicação exibida no hover. Se nulo, mostra o próprio título.
+    var help: String? = nil
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -77,6 +107,7 @@ struct StatCard: View {
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
         .cardBackground()
+        .tip(help ?? title)
     }
 }
 

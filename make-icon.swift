@@ -1,59 +1,53 @@
 import AppKit
 
 // Gera os PNGs do ícone do Uptend num .iconset (depois vira .icns via iconutil).
-// Marca: linha de tendência para cima (up-trend) branca sobre gradiente azul→teal.
+// Marca: martelo (SF Symbol) sobre um squircle azul.
 
 let outDir = CommandLine.arguments.count > 1 ? CommandLine.arguments[1] : "./Uptend.iconset"
 try? FileManager.default.createDirectory(atPath: outDir, withIntermediateDirectories: true)
 
-func makeImage(_ size: CGFloat) -> CGImage {
-    let pixels = Int(size)
-    let cs = CGColorSpaceCreateDeviceRGB()
-    let ctx = CGContext(data: nil, width: pixels, height: pixels, bitsPerComponent: 8,
-                        bytesPerRow: 0, space: cs, bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)!
+func symbolImage(_ name: String, pointSize: CGFloat, color: NSColor) -> NSImage {
+    let config = NSImage.SymbolConfiguration(pointSize: pointSize, weight: .semibold)
+    guard let base = NSImage(systemSymbolName: name, accessibilityDescription: nil)?
+        .withSymbolConfiguration(config) else { return NSImage() }
+    let out = NSImage(size: base.size)
+    out.lockFocus()
+    base.draw(at: .zero, from: NSRect(origin: .zero, size: base.size), operation: .sourceOver, fraction: 1)
+    color.set()
+    NSRect(origin: .zero, size: base.size).fill(using: .sourceAtop)
+    out.unlockFocus()
+    return out
+}
 
+func makePNG(_ size: CGFloat) -> Data? {
+    let px = Int(size)
+    guard let rep = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: px, pixelsHigh: px,
+                                     bitsPerSample: 8, samplesPerPixel: 4, hasAlpha: true, isPlanar: false,
+                                     colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0) else { return nil }
+
+    NSGraphicsContext.saveGraphicsState()
+    NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: rep)
+
+    // Fundo (squircle) com gradiente azul.
     let margin = size * 0.098
-    let rect = CGRect(x: margin, y: margin, width: size - 2 * margin, height: size - 2 * margin)
+    let rect = NSRect(x: margin, y: margin, width: size - 2 * margin, height: size - 2 * margin)
     let radius = size * 0.205
+    let path = NSBezierPath(roundedRect: rect, xRadius: radius, yRadius: radius)
+    let gradient = NSGradient(colors: [
+        NSColor(red: 0.24, green: 0.54, blue: 0.98, alpha: 1),
+        NSColor(red: 0.14, green: 0.40, blue: 0.92, alpha: 1),
+    ])!
+    gradient.draw(in: path, angle: -90)
 
-    // Fundo (squircle) com gradiente.
-    ctx.saveGState()
-    ctx.addPath(CGPath(roundedRect: rect, cornerWidth: radius, cornerHeight: radius, transform: nil))
-    ctx.clip()
-    let colors = [CGColor(colorSpace: cs, components: [0.30, 0.42, 0.95, 1])!,
-                  CGColor(colorSpace: cs, components: [0.12, 0.78, 0.70, 1])!] as CFArray
-    let gradient = CGGradient(colorsSpace: cs, colors: colors, locations: [0, 1])!
-    ctx.drawLinearGradient(gradient, start: CGPoint(x: rect.midX, y: rect.maxY),
-                           end: CGPoint(x: rect.midX, y: rect.minY), options: [])
-    ctx.restoreGState()
+    // Martelo, em tom escuro (como na referência).
+    let hammer = symbolImage("hammer.fill", pointSize: size * 0.46,
+                             color: NSColor(red: 0.11, green: 0.13, blue: 0.20, alpha: 1))
+    let hs = hammer.size
+    let drawRect = NSRect(x: (size - hs.width) / 2, y: (size - hs.height) / 2, width: hs.width, height: hs.height)
+    hammer.draw(in: drawRect)
 
-    // Linha de tendência para cima + seta.
-    func pt(_ nx: CGFloat, _ ny: CGFloat) -> CGPoint {
-        CGPoint(x: rect.minX + rect.width * nx, y: rect.minY + rect.height * ny)
-    }
-    let pts = [pt(0.22, 0.40), pt(0.42, 0.52), pt(0.56, 0.44), pt(0.78, 0.66)]
-
-    ctx.setStrokeColor(CGColor(red: 1, green: 1, blue: 1, alpha: 1))
-    ctx.setLineWidth(size * 0.062)
-    ctx.setLineCap(.round)
-    ctx.setLineJoin(.round)
-    ctx.beginPath()
-    ctx.move(to: pts[0])
-    for point in pts.dropFirst() { ctx.addLine(to: point) }
-    ctx.strokePath()
-
-    // Ponta da seta no último ponto.
-    let tip = pts[3], prev = pts[2]
-    let angle = atan2(tip.y - prev.y, tip.x - prev.x)
-    let len = size * 0.14
-    let a1 = angle + .pi * 0.82, a2 = angle - .pi * 0.82
-    ctx.beginPath()
-    ctx.move(to: CGPoint(x: tip.x + cos(a1) * len, y: tip.y + sin(a1) * len))
-    ctx.addLine(to: tip)
-    ctx.addLine(to: CGPoint(x: tip.x + cos(a2) * len, y: tip.y + sin(a2) * len))
-    ctx.strokePath()
-
-    return ctx.makeImage()!
+    NSGraphicsContext.restoreGraphicsState()
+    return rep.representation(using: .png, properties: [:])
 }
 
 let targets: [(Int, String)] = [
@@ -65,9 +59,7 @@ let targets: [(Int, String)] = [
 ]
 
 for (px, name) in targets {
-    let image = makeImage(CGFloat(px))
-    let rep = NSBitmapImageRep(cgImage: image)
-    guard let data = rep.representation(using: .png, properties: [:]) else { continue }
+    guard let data = makePNG(CGFloat(px)) else { continue }
     try? data.write(to: URL(fileURLWithPath: "\(outDir)/\(name).png"))
 }
 print("Ícone gerado em \(outDir)")

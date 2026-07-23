@@ -21,7 +21,22 @@ enum Shell {
         return env
     }
 
-    static func capture(_ launchPath: String, _ args: [String], env: [String: String]? = nil) async -> CommandResult {
+    /// Procura um binário nos diretórios comuns do Homebrew/sistema (bin e sbin).
+    nonisolated static func binaryPath(_ name: String) -> String? {
+        let dirs = [
+            "/opt/homebrew/bin", "/opt/homebrew/sbin",
+            "/usr/local/bin", "/usr/local/sbin",
+            "/usr/bin", "/bin", "/usr/sbin", "/sbin",
+        ]
+        for dir in dirs {
+            let path = dir + "/" + name
+            if FileManager.default.isExecutableFile(atPath: path) { return path }
+        }
+        return nil
+    }
+
+    static func capture(_ launchPath: String, _ args: [String], env: [String: String]? = nil,
+                        stdin: String? = nil) async -> CommandResult {
         await withCheckedContinuation { (cont: CheckedContinuation<CommandResult, Never>) in
             DispatchQueue.global().async {
                 let process = Process()
@@ -33,12 +48,22 @@ enum Shell {
                 let errPipe = Pipe()
                 process.standardOutput = outPipe
                 process.standardError = errPipe
+                // stdin usado para passar segredos SEM que apareçam no argv/cmdline
+                // (world-readable em /proc). Escrevemos e fechamos logo após o run.
+                let inPipe: Pipe? = stdin != nil ? Pipe() : nil
+                if let inPipe { process.standardInput = inPipe }
 
                 do {
                     try process.run()
                 } catch {
                     cont.resume(returning: CommandResult(exitCode: -1, stdout: "", stderr: error.localizedDescription))
                     return
+                }
+
+                if let inPipe, let stdin {
+                    let h = inPipe.fileHandleForWriting
+                    h.write(Data(stdin.utf8))
+                    try? h.close()
                 }
 
                 // Lê as duas saídas concorrentemente para não travar o buffer.
@@ -68,6 +93,7 @@ enum Shell {
     }
 
     static func stream(_ launchPath: String, _ args: [String], env: [String: String]? = nil,
+                       onStart: ((Process) -> Void)? = nil,
                        onOutput: @escaping @Sendable (String) -> Void) async -> Int32 {
         await withCheckedContinuation { (cont: CheckedContinuation<Int32, Never>) in
             let process = Process()
@@ -82,17 +108,24 @@ enum Shell {
             let handle = pipe.fileHandleForReading
             handle.readabilityHandler = { fh in
                 let data = fh.availableData
-                guard !data.isEmpty, let text = String(data: data, encoding: .utf8) else { return }
-                onOutput(text)
+                guard !data.isEmpty else { return }
+                // Decode tolerante: se um caractere multibyte for cortado entre chunks,
+                // não descarta o pedaço (usa caractere de substituição, raro e cosmético).
+                onOutput(String(decoding: data, as: UTF8.self))
             }
 
             process.terminationHandler = { proc in
                 handle.readabilityHandler = nil
+                // Drena o que sobrou no pipe (antes isto era perdido — as últimas linhas
+                // da saída sumiam do log).
+                let remaining = handle.availableData
+                if !remaining.isEmpty { onOutput(String(decoding: remaining, as: UTF8.self)) }
                 cont.resume(returning: proc.terminationStatus)
             }
 
             do {
                 try process.run()
+                onStart?(process)
             } catch {
                 handle.readabilityHandler = nil
                 cont.resume(returning: -1)

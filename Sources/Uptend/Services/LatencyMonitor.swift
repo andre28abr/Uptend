@@ -32,6 +32,9 @@ final class LatencyMonitor: ObservableObject {
     }
 
     private func tick() async {
+        // Valida o alvo (defesa em profundidade, igual a NetworkTools.ping): um host
+        // começando com "-" seria lido como opção do ping. (B9)
+        guard InputValidator.isValidHost(host) else { return }
         let out = await Shell.capture("/sbin/ping", ["-c", "1", "-t", "2", host])
         let ms = Self.parseTime(out.stdout)
 

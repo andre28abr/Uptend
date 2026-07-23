@@ -34,12 +34,29 @@ final class ProfilesService: ObservableObject {
             .map { BrewProfile(name: $0.deletingPathExtension().lastPathComponent, url: $0) }
     }
 
+    /// Move o perfil para a Lixeira (reversível), em vez de apagar de vez.
     func delete(_ profile: BrewProfile) {
-        try? FileManager.default.removeItem(at: profile.url)
+        try? FileManager.default.trashItem(at: profile.url, resultingItemURL: nil)
         load()
     }
 
     func revealInFinder(_ profile: BrewProfile) {
         NSWorkspace.shared.activateFileViewerSelecting([profile.url])
+    }
+
+    // MARK: - Comparação de Brewfile (puro, testável)
+
+    /// Extrai as fórmulas (`brew "x"`) e casks (`cask "y"`) de um Brewfile.
+    nonisolated static func parseBrewfile(_ content: String) -> (brews: Set<String>, casks: Set<String>) {
+        var brews = Set<String>()
+        var casks = Set<String>()
+        for line in content.split(whereSeparator: \.isNewline) {
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+            let parts = trimmed.split(separator: "\"")
+            guard parts.count >= 2 else { continue }
+            if trimmed.hasPrefix("brew \"") { brews.insert(String(parts[1])) }
+            else if trimmed.hasPrefix("cask \"") { casks.insert(String(parts[1])) }
+        }
+        return (brews, casks)
     }
 }

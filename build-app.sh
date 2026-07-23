@@ -61,6 +61,12 @@ cat > "${APP_DIR}/Contents/Info.plist" <<PLIST
     <key>NSPrincipalClass</key><string>NSApplication</string>
     <key>NSLocationUsageDescription</key><string>O Uptend usa a localização apenas para exibir o nome (SSID) da rede Wi-Fi, uma exigência do macOS. Nenhum dado de localização é coletado ou enviado.</string>
     <key>NSLocationWhenInUseUsageDescription</key><string>O Uptend usa a localização apenas para exibir o nome (SSID) da rede Wi-Fi, uma exigência do macOS. Nenhum dado de localização é coletado ou enviado.</string>
+    <key>NSAppTransportSecurity</key>
+    <dict>
+        <!-- Permite que o painel embutido (WebView) carregue serviços self-hosted na rede
+             local por http (ex.: Metabase, Dozzle). Não libera http arbitrário da internet. -->
+        <key>NSAllowsLocalNetworking</key><true/>
+    </dict>
 </dict>
 </plist>
 PLIST

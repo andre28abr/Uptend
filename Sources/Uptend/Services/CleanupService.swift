@@ -47,6 +47,7 @@ final class CleanupService: ObservableObject {
     @Published var targets: [CleanupTarget] = []
     @Published var scanning = false
     @Published var currentSubID: String?
+    @Published var lastError: String?
 
     func scan(_ subID: String) async {
         currentSubID = subID
@@ -81,21 +82,25 @@ final class CleanupService: ObservableObject {
 
     func clean(_ target: CleanupTarget) async {
         let fm = FileManager.default
+        lastError = nil
+        var failed = 0
+        // Move para a Lixeira e conta as falhas (não engole em silêncio): itens
+        // protegidos/ocupados são reportados ao usuário em vez de sumirem. (B10)
+        func trash(_ url: URL) { do { try fm.trashItem(at: url, resultingItemURL: nil) } catch { failed += 1 } }
         switch target.kind {
         case .emptyTrash:
             _ = await Shell.capture("/usr/bin/osascript",
                                     ["-e", "tell application \"Finder\" to empty the trash"])
         case .trashContents(let dir):
             for item in (try? fm.contentsOfDirectory(at: dir, includingPropertiesForKeys: nil)) ?? [] {
-                try? fm.trashItem(at: item, resultingItemURL: nil)
+                trash(item)
             }
         case .trashPaths(let urls):
-            for url in urls where fm.fileExists(atPath: url.path) {
-                try? fm.trashItem(at: url, resultingItemURL: nil)
-            }
+            for url in urls where fm.fileExists(atPath: url.path) { trash(url) }
         case .brewCleanup:
             break // executado pela BrewService a partir da view
         }
+        if failed > 0 { lastError = "\(failed) item(ns) não puderam ser movidos para a Lixeira (protegidos ou em uso)." }
         ActionLog.shared.record("Limpeza: \(target.name)")
         if let subID = currentSubID { await scan(subID) }
     }

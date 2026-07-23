@@ -49,6 +49,24 @@ struct SecurityTests {
         #expect(!InputValidator.isValidBundleID(""))
     }
 
+    @Test func databaseNameValidation() {
+        #expect(InputValidator.isValidDatabaseName("loja"))
+        #expect(InputValidator.isValidDatabaseName("app_prod-2026"))
+        #expect(!InputValidator.isValidDatabaseName("x'; DROP DATABASE y; --"))
+        #expect(!InputValidator.isValidDatabaseName("nome com espaço"))
+        #expect(!InputValidator.isValidDatabaseName("`crase`"))
+        #expect(!InputValidator.isValidDatabaseName(""))       // vazio é tratado à parte no isValid
+    }
+
+    @Test func jumpHostValidation() {
+        #expect(InputValidator.isValidJumpHost("bastion.empresa.com"))
+        #expect(InputValidator.isValidJumpHost("user@bastion:22"))
+        #expect(!InputValidator.isValidJumpHost("bastion; rm -rf ~"))
+        #expect(!InputValidator.isValidJumpHost("$(whoami)"))
+        #expect(!InputValidator.isValidJumpHost("-oProxyCommand=evil"))   // não começa por '-'
+        #expect(!InputValidator.isValidJumpHost(""))
+    }
+
     @Test func catalogTokensAreAllValid() {
         for (_, apps) in MockData.apps {
             for app in apps {
@@ -81,5 +99,53 @@ struct SecurityTests {
         #expect(!InputValidator.isSafeAppleScriptText("foo\\bar"))
         #expect(!InputValidator.isSafeAppleScriptText("foo\nbar"))
         #expect(!InputValidator.isSafeAppleScriptText(""))
+    }
+
+    @Test func containerNameValidation() {
+        // Nome de container Docker (--name): alfanumérico + _ . -, sem / : @ nem "..".
+        for ok in ["meu-site", "uptime-kuma", "app_1", "n8n", "db.prod"] {
+            #expect(InputValidator.isValidContainerName(ok), "\(ok) deveria ser válido")
+        }
+        for bad in ["-rf", "a/b", "a:b", "user@host", "..", "app..v2",
+                    "foo bar", "foo;rm", "$(id)", "", "café"] {
+            #expect(!InputValidator.isValidContainerName(bad), "\(bad) deveria ser rejeitado")
+        }
+    }
+
+    @Test func serviceNameValidation() {
+        // Unidades systemd: aceita @ . _ : - mas nunca "..", espaço ou começar com "-".
+        for ok in ["docker.service", "ssh", "getty@tty1.service", "systemd-logind"] {
+            #expect(InputValidator.isValidServiceName(ok), "\(ok) deveria ser válido")
+        }
+        for bad in ["-x", "../evil", "a..b", "foo bar", "foo;rm", ""] {
+            #expect(!InputValidator.isValidServiceName(bad), "\(bad) deveria ser rejeitado")
+        }
+    }
+
+    @Test func fileNameBlocksTraversal() {
+        #expect(InputValidator.isValidFileName("uptend_lab_ed25519"))
+        #expect(InputValidator.isValidFileName("id_ed25519.pub"))
+        #expect(!InputValidator.isValidFileName(".."))
+        #expect(!InputValidator.isValidFileName("."))
+        #expect(!InputValidator.isValidFileName("a..b"))
+        #expect(!InputValidator.isValidFileName("-rf"))
+        #expect(!InputValidator.isValidFileName("a/b"))
+    }
+
+    @Test func brewTokenBlocksDotDot() {
+        // Reforço de defesa em profundidade: "a..b" tem caracteres válidos mas ".." é traversal.
+        #expect(!InputValidator.isValidBrewToken("a..b"))
+        #expect(!InputValidator.isValidBrewToken("..foo"))
+        #expect(InputValidator.isValidBrewToken("python@3.12"))
+    }
+
+    @Test func repoFullNameValidation() {
+        #expect(InputValidator.isValidRepoFullName("andre28abr/peapod"))
+        #expect(InputValidator.isValidRepoFullName("wazuh/wazuh-docker"))
+        #expect(!InputValidator.isValidRepoFullName("../../etc"))
+        #expect(!InputValidator.isValidRepoFullName("a/b/c"))
+        #expect(!InputValidator.isValidRepoFullName("owner..x/repo"))
+        #expect(!InputValidator.isValidRepoFullName("-owner/repo"))
+        #expect(!InputValidator.isValidRepoFullName("owner/"))
     }
 }

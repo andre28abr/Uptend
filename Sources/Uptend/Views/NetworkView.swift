@@ -13,6 +13,7 @@ struct NetworkView: View {
                 case "quality": QualityCard()
                 case "addresses": AddressesCard()
                 case "connections": ConnectionsCard()
+                case "ports": PortsToolView()
                 case "speedtest": SpeedTestCard()
                 case "ping": PingCard()
                 case "dns": DNSCard()
@@ -175,16 +176,29 @@ struct WiFiCard: View {
 
 struct QualityCard: View {
     @StateObject private var latency = LatencyMonitor()
+    @State private var running = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            ScreenHeader(title: "Qualidade", subtitle: "Latência para \(latency.host)")
+            ScreenHeader(title: "Qualidade",
+                         subtitle: running ? "Medindo latência para \(latency.host)…" : "Latência para \(latency.host)") {
+                Button {
+                    running.toggle()
+                    if running { latency.start() } else { latency.stop() }
+                } label: {
+                    Label(running ? "Parar" : "Medir", systemImage: running ? "stop.fill" : "play.fill")
+                }
+            }
 
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 150), spacing: 12)], spacing: 12) {
-                metric("Latência", latency.current > 0 ? String(format: "%.0f ms", latency.current) : "—")
-                metric("Média", latency.average > 0 ? String(format: "%.0f ms", latency.average) : "—")
-                metric("Jitter", String(format: "%.0f ms", latency.jitter))
-                metric("Perda", String(format: "%.0f%%", latency.lossPercent))
+                metric("Latência", latency.current > 0 ? String(format: "%.0f ms", latency.current) : "—",
+                       help: "Tempo de ida e volta até o servidor agora. Quanto menor, mais responsiva a conexão.")
+                metric("Média", latency.average > 0 ? String(format: "%.0f ms", latency.average) : "—",
+                       help: "Latência média durante a medição.")
+                metric("Jitter", String(format: "%.0f ms", latency.jitter),
+                       help: "Variação da latência. Jitter alto causa travadas em chamadas e jogos.")
+                metric("Perda", String(format: "%.0f%%", latency.lossPercent),
+                       help: "Porcentagem de pacotes que não voltaram. Acima de 0% indica instabilidade.")
             }
 
             Chart(Array(latency.history.enumerated()), id: \.offset) { index, value in
@@ -197,11 +211,10 @@ struct QualityCard: View {
             .padding(12)
             .cardBackground()
         }
-        .task { latency.start() }
-        .onDisappear { latency.stop() }
+        .onDisappear { latency.stop(); running = false }
     }
 
-    private func metric(_ title: String, _ value: String) -> some View {
+    private func metric(_ title: String, _ value: String, help: String = "") -> some View {
         VStack(alignment: .leading, spacing: 6) {
             Text(value).font(.system(size: 18, weight: .medium).monospacedDigit())
             Text(title).font(.caption).foregroundStyle(.secondary)
@@ -209,6 +222,7 @@ struct QualityCard: View {
         .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
         .cardBackground()
+        .tip(help.isEmpty ? title : help)
     }
 }
 

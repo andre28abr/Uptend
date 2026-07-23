@@ -9,6 +9,7 @@ struct SetupView: View {
             VStack(alignment: .leading, spacing: 16) {
                 switch sub?.id {
                 case "profiles": ProfilesSetupView()
+                case "compare": CompareProfileView()
                 case "dotfiles": DotfilesSetupView()
                 default: FirstRunView()
                 }
@@ -51,7 +52,7 @@ struct FirstRunView: View {
                  systemImage: "doc.on.doc",
                  tint: .blue,
                  action: ("Ir para Perfis", {
-                     state.category = .setup
+                     state.category = .dashboard
                      state.subID = "profiles"
                  }))
 
@@ -60,7 +61,7 @@ struct FirstRunView: View {
                  systemImage: "terminal",
                  tint: .blue,
                  action: ("Ir para Dotfiles", {
-                     state.category = .setup
+                     state.category = .dashboard
                      state.subID = "dotfiles"
                  }))
 
@@ -69,7 +70,7 @@ struct FirstRunView: View {
                  systemImage: "switch.2",
                  tint: .blue,
                  action: ("Ir para Ajustes", {
-                     state.category = .system
+                     state.category = .settings
                      state.subID = "toggles"
                  }))
         }
@@ -104,6 +105,7 @@ struct ProfilesSetupView: View {
     @StateObject private var profiles = ProfilesService()
     @EnvironmentObject var brew: BrewService
     @State private var newName = "meu-setup"
+    @State private var pendingDelete: BrewProfile?
 
     var body: some View {
         Group {
@@ -138,12 +140,26 @@ struct ProfilesSetupView: View {
                             Task { await brew.installBundle(at: profile.url.path, profileName: profile.name) }
                         }
                         IconButton(systemImage: "folder", help: "Mostrar no Finder") { profiles.revealInFinder(profile) }
-                        IconButton(systemImage: "trash", help: "Excluir perfil") { profiles.delete(profile) }
+                        IconButton(systemImage: "trash", help: "Excluir perfil") { pendingDelete = profile }
                     }
                 }
             }
         }
         .task { profiles.load() }
+        .confirmationDialog(
+            "Excluir o perfil \"\(pendingDelete?.name ?? "")\"?",
+            isPresented: Binding(get: { pendingDelete != nil }, set: { if !$0 { pendingDelete = nil } }),
+            titleVisibility: .visible
+        ) {
+            if let profile = pendingDelete {
+                Button("Mover para a Lixeira", role: .destructive) {
+                    profiles.delete(profile); pendingDelete = nil
+                }
+            }
+            Button("Cancelar", role: .cancel) { pendingDelete = nil }
+        } message: {
+            Text("O Brewfile vai para a Lixeira (reversível).")
+        }
     }
 }
 

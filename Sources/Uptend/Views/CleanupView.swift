@@ -21,6 +21,14 @@ struct CleanupView: View {
     }
 
     var body: some View {
+        if sub?.id == "space" {
+            SpaceAnalyzerView()
+        } else {
+            cleanupContent
+        }
+    }
+
+    private var cleanupContent: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
                 ScreenHeader(
