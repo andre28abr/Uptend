@@ -3,13 +3,15 @@
 > **Uptend** é um app nativo de macOS (SwiftUI) que faz duas coisas que costumam exigir dez ferramentas: **cuidar do Mac** — reinstalar tudo com um clique depois de formatar (perfis de Brewfile e dotfiles), Homebrew, apps, limpeza, Git/GitHub, Docker, rede, segurança e ajustes do sistema — e **auditar servidores Linux** com um **coletor portátil** que roda em qualquer máquina (remota, local ou de um pen drive) e vira, dentro do app, **painel de auditoria, relatórios em Markdown/HTML/PDF, mapa de superfície de ataque, correlação com CVEs, lente LGPD e playbook de hardening com rollback**. Tudo local, sem conta e sem telemetria. *up* (uptime / upkeep) + *tend* (cuidar).
 
 [![ci](https://github.com/andre28abr/Uptend/actions/workflows/ci.yml/badge.svg)](https://github.com/andre28abr/Uptend/actions/workflows/ci.yml)
-![Status](https://img.shields.io/badge/status-v0.1%20%C2%B7%20auditado-success)
+![Status](https://img.shields.io/badge/status-v0.1.0%20%C2%B7%20auditado-success)
 ![Swift](https://img.shields.io/badge/Swift-6-F05138?logo=swift&logoColor=white)
 ![SwiftUI](https://img.shields.io/badge/SwiftUI-macOS%2014%2B-0A84FF?logo=apple&logoColor=white)
 ![Tests](https://img.shields.io/badge/tests-428%20passing%20%C2%B7%2070%20su%C3%ADtes-success)
 ![Warnings](https://img.shields.io/badge/compiler%20warnings-0-success)
 ![LGPD](https://img.shields.io/badge/LGPD-lens-10b981)
+![Homebrew](https://img.shields.io/badge/Homebrew-brew%20install%20----cask%20uptend-FBB040?logo=homebrew&logoColor=black)
 ![License](https://img.shields.io/badge/license-AGPL--3.0-orange)
+[![Baixar](https://img.shields.io/badge/baixar-Uptend.dmg-1D9E75?logo=apple&logoColor=white)](https://github.com/andre28abr/Uptend/releases/latest)
 
 ---
 
@@ -25,11 +27,20 @@ Desde 2025 conduz, como **product owner técnico**, projetos open-source de segu
 
 ### 📂 Outros projetos do autor
 
-- **[SentinelBR](https://github.com/andre28abr/SentinelBR-platform)**: plataforma open-source de SIEM + LGPD para PMEs brasileiras: agente Go com gRPC e mTLS, detecção em tempo real, resposta automatizada e compliance LGPD nativa, multi-tenant.
-- **[VigiaOS](https://github.com/andre28abr/VigiaOS)**: suíte de segurança, privacidade e LGPD para a estação de trabalho (Fedora Workstation, GTK4 + libadwaita), com 13 ferramentas defensivas, módulos de detecção e resposta e laboratório educacional.
-- **[Plataforma LGPD](https://github.com/andre28abr/lgpd-platform)**: plataforma web multi-tenant que treina, avalia e certifica os setores de uma empresa em LGPD e dá ao DPO as ferramentas de operação (ROPA, RIPD, direitos do titular, incidentes).
-- **[Peapod](https://github.com/andre28abr/Peapod)**: sandboxes isolados e descartáveis para agentes de IA (MCP, CLI, dashboard web e app nativo de macOS): rede desligada por padrão, allowlist de domínios e trilha de auditoria. Go e Swift.
-- **[banana](https://github.com/andre28abr/banana)**: editor local-first de notas Markdown, código e PDF, com vault cifrado (Argon2id + AES-256-GCM). Tauri 2, Rust e Svelte 5.
+**[SentinelBR](https://github.com/andre28abr/SentinelBR-platform)** ![Python](https://img.shields.io/badge/-Python-3776AB?logo=python&logoColor=white) ![Go](https://img.shields.io/badge/-Go-00ADD8?logo=go&logoColor=white) ![React](https://img.shields.io/badge/-React-20232A?logo=react&logoColor=61DAFB)<br>
+Plataforma open-source de **SIEM + LGPD** para PMEs brasileiras: agente Go com gRPC e mTLS, detecção em tempo real, resposta automatizada e compliance LGPD nativa, multi-tenant. 225 testes, CI em 16 jobs.
+
+**[VigiaOS](https://github.com/andre28abr/VigiaOS)** ![Python](https://img.shields.io/badge/-Python-3776AB?logo=python&logoColor=white) ![Rust](https://img.shields.io/badge/-Rust-000000?logo=rust&logoColor=white) ![GTK4](https://img.shields.io/badge/-GTK4-4A86CF?logo=gtk&logoColor=white)<br>
+Suíte de **segurança, privacidade e LGPD** para a estação de trabalho (Fedora Workstation, GTK4 + libadwaita), com 13 ferramentas defensivas, módulos de detecção e resposta e laboratório educacional. 1460 testes em Python e 28 em Rust.
+
+**[Plataforma LGPD](https://github.com/andre28abr/lgpd-platform)** ![Python](https://img.shields.io/badge/-Python-3776AB?logo=python&logoColor=white) ![Flask](https://img.shields.io/badge/-Flask-000000?logo=flask&logoColor=white) ![PostgreSQL](https://img.shields.io/badge/-PostgreSQL-4169E1?logo=postgresql&logoColor=white)<br>
+Plataforma web multi-tenant que **treina, avalia e certifica** os setores de uma empresa em LGPD e dá ao DPO as ferramentas de operação: ROPA, RIPD, direitos do titular e incidentes. 121 testes, 95% de cobertura.
+
+**[Peapod](https://github.com/andre28abr/Peapod)** ![Go](https://img.shields.io/badge/-Go-00ADD8?logo=go&logoColor=white) ![Swift](https://img.shields.io/badge/-Swift-F05138?logo=swift&logoColor=white) ![Docker](https://img.shields.io/badge/-Docker-2496ED?logo=docker&logoColor=white)<br>
+Sandboxes **isolados e descartáveis para agentes de IA**, dirigidos por MCP, CLI, dashboard web e app nativo de macOS: rede desligada por padrão, allowlist de domínios, trilha de auditoria. Distribuído por Homebrew.
+
+**[banana](https://github.com/andre28abr/banana)** ![Rust](https://img.shields.io/badge/-Rust-000000?logo=rust&logoColor=white) ![Tauri 2](https://img.shields.io/badge/-Tauri%202-24C8D8?logo=tauri&logoColor=white) ![Svelte 5](https://img.shields.io/badge/-Svelte%205-FF3E00?logo=svelte&logoColor=white)<br>
+Editor **local-first** de notas Markdown, código e PDF, com vault cifrado (Argon2id + AES-256-GCM). 393 testes.
 
 Todos os projetos, com o porquê de cada um, no perfil [github.com/andre28abr](https://github.com/andre28abr).
 
