@@ -40,7 +40,15 @@ struct TLSProbeResult: Identifiable, Sendable {
 enum AuditSeverityLevel { case ok, info, low, medium, high }
 
 /// Referência mutável para capturar o certificado dentro do verify block.
-private final class CertBox { var cert: SecCertificate? }
+/// Estado mutável do handshake, compartilhado entre o verify block (fila global),
+/// o stateUpdateHandler (fila da conexão) e o finish() (fila serial `done`).
+/// Uma classe evita a mutação de `var` capturada em código concorrente (erro no
+/// modo Swift 6); a serialização de escrita/leitura é garantida por `done.sync`.
+private final class ProbeBox: @unchecked Sendable {
+    var cert: SecCertificate?
+    var result: TLSProbeResult
+    init(result: TLSProbeResult) { self.result = result }
+}
 
 enum TLSScanner {
 
@@ -133,8 +141,7 @@ enum TLSScanner {
                                   minVersion: tls_protocol_version_t, maxVersion: tls_protocol_version_t,
                                   timeoutMs: Int) async -> TLSProbeResult {
         await withCheckedContinuation { (cont: CheckedContinuation<TLSProbeResult, Never>) in
-            var result = TLSProbeResult(host: host, port: port)
-            let box = CertBox()
+            let box = ProbeBox(result: TLSProbeResult(host: host, port: port))
 
             let tls = NWProtocolTLS.Options()
             let sec = tls.securityProtocolOptions
@@ -150,7 +157,7 @@ enum TLSScanner {
             }, DispatchQueue.global())
 
             guard let nwPort = NWEndpoint.Port(rawValue: UInt16(port)) else {
-                cont.resume(returning: result); return
+                cont.resume(returning: box.result); return
             }
             let conn = NWConnection(host: NWEndpoint.Host(host), port: nwPort, using: NWParameters(tls: tls))
 
@@ -161,7 +168,7 @@ enum TLSScanner {
                     guard !finished else { return }
                     finished = true
                     conn.cancel()
-                    cont.resume(returning: result)
+                    cont.resume(returning: box.result)
                 }
             }
 
@@ -170,18 +177,18 @@ enum TLSScanner {
             conn.stateUpdateHandler = { state in
                 switch state {
                 case .ready:
-                    result.reachable = true
+                    box.result.reachable = true
                     if let md = conn.metadata(definition: NWProtocolTLS.definition) as? NWProtocolTLS.Metadata {
                         let m = md.securityProtocolMetadata
                         let v = sec_protocol_metadata_get_negotiated_tls_protocol_version(m)
-                        result.speaksTLS = true
-                        result.tlsVersion = versionName(v)
-                        result.cipher = cipherName(sec_protocol_metadata_get_negotiated_tls_ciphersuite(m))
+                        box.result.speaksTLS = true
+                        box.result.tlsVersion = versionName(v)
+                        box.result.cipher = cipherName(sec_protocol_metadata_get_negotiated_tls_ciphersuite(m))
                     }
-                    if let cert = box.cert { fill(&result, from: cert) }
+                    if let cert = box.cert { fill(&box.result, from: cert) }
                     finish()
                 case .failed:
-                    result.reachable = true      // TCP respondeu mas TLS falhou nesta faixa de versão
+                    box.result.reachable = true      // TCP respondeu mas TLS falhou nesta faixa de versão
                     finish()
                 case .cancelled:
                     finish()
