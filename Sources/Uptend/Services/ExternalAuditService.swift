@@ -244,11 +244,15 @@ final class ExternalAuditService: ObservableObject {
                 }
             }
         }
-        // Uma passada: grava o script num temp, roda (saída em /tmp), imprime o JSON e limpa.
+        // Uma passada: grava o script num diretório temporário PRÓPRIO (mktemp -d
+        // cria com modo 700 e nome imprevisível — um caminho fixo em /tmp poderia
+        // ser plantado/trocado por outro usuário local do servidor), roda, imprime
+        // o JSON e limpa.
         let remote = prelude
-            + "echo \(b64) | base64 -d > /tmp/uptend-ac.sh && "
-            + "F=$(\(env)bash /tmp/uptend-ac.sh /tmp 2>/dev/null | grep '^UPTEND_AUDIT_FILE=' | cut -d= -f2) && "
-            + "cat \"$F\" && rm -f /tmp/uptend-ac.sh \"$F\" \"$F.sha256\""
+            + "T=$(mktemp -d /tmp/uptend-ac.XXXXXX) && "
+            + "echo \(b64) | base64 -d > \"$T/ac.sh\" && "
+            + "F=$(\(env)bash \"$T/ac.sh\" \"$T\" 2>/dev/null | grep '^UPTEND_AUDIT_FILE=' | cut -d= -f2) && "
+            + "cat \"$F\" && rm -rf \"$T\""
         return CollectorInvocation(remote: remote, stdin: stdin)
     }
 

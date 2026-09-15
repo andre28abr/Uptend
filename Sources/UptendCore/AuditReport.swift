@@ -165,7 +165,7 @@ public enum AuditReport {
             line("|---|---|---|---|---|---|")
             for d in audit.disks {
                 let smart = d.smartAvailable == true ? (d.smartHealthy == true ? "OK" : "FALHA") : "—"
-                line("| /dev/\(d.name) | \(d.model ?? "—") | \(bytesLabel(d.sizeBytes)) | \(d.rotational == true ? "HDD" : "SSD") | \(smart) | \(d.powerOnHours.map(String.init) ?? "—") |")
+                line("| /dev/\(mdCell(d.name)) | \(mdCell(d.model ?? "—")) | \(bytesLabel(d.sizeBytes)) | \(d.rotational == true ? "HDD" : "SSD") | \(smart) | \(d.powerOnHours.map(String.init) ?? "—") |")
             }
             line()
         }
@@ -177,7 +177,7 @@ public enum AuditReport {
             if let primary = p.primary { line("Propósito predominante: **\(primary)**.") ; line() }
             line("| Finalidade | Prontidão |")
             line("|---|---|")
-            for pu in p.purposes.sorted(by: { $0.score > $1.score }) { line("| \(pu.label) | \(pu.score)% |") }
+            for pu in p.purposes.sorted(by: { $0.score > $1.score }) { line("| \(mdCell(pu.label)) | \(pu.score)% |") }
             line()
         }
 
@@ -189,7 +189,7 @@ public enum AuditReport {
                 line("| Container | Imagem | Estado | Função |")
                 line("|---|---|---|---|")
                 for c in dk.containers {
-                    line("| \(c.name) | \(c.image) | \(c.state ?? "—") | \(containerPurpose(image: c.image) ?? "—") |")
+                    line("| \(mdCell(c.name)) | \(mdCell(c.image)) | \(mdCell(c.state ?? "—")) | \(containerPurpose(image: c.image) ?? "—") |")
                 }
                 line()
             }
@@ -235,7 +235,10 @@ public enum AuditReport {
                 line("### [\(f.severity.label)] \(f.title)\(mitre)")
                 line("- **Esforço:** \(rem.effort == .quick ? "ganho rápido" : "projeto")")
                 if let c = rem.command { line("- **Correção:**"); line(); line("```bash"); line(c); line("```") }
-                if let raw = f.evidenceRaw, !raw.isEmpty { line("- **Evidência:**"); line(); line("```"); line(raw); line("```") }
+                if let raw = f.evidenceRaw, !raw.isEmpty {
+                    let fence = mdFence(for: raw)
+                    line("- **Evidência:**"); line(); line(fence); line(raw); line(fence)
+                }
                 line()
             }
         }
@@ -1435,10 +1438,25 @@ public enum AuditReport {
         return out
     }
 
-    /// "AAAA-MM-DDThh:mm:ssZ" → "DD/MM/AAAA às HH:mm (UTC)".
+    /// Rótulo humano para o modo do coletor. O coletor de sistema emite
+    /// "admin"/"user"; o de banco, "completo"/"estrutura" — valores fora
+    /// desses aparecem crus em vez de virarem "Usuário (parcial)" por engano.
+    static func modeLabel(_ mode: String) -> String {
+        switch mode {
+        case "admin": "Administrativo (completo)"
+        case "user": "Usuário (parcial)"
+        case "completo": "Banco — completo (com amostras)"
+        case "estrutura": "Banco — estrutura (sem dados)"
+        default: mode
+        }
+    }
+
+    /// "AAAA-MM-DDThh:mm:ssZ" → "DD/MM/AAAA às HH:mm (UTC)". Aceita fração de segundo.
     static func humanDate(_ iso: String) -> String {
         let f = ISO8601DateFormatter()
-        guard let d = f.date(from: iso) else { return String(iso.prefix(10)) }
+        let ff = ISO8601DateFormatter()
+        ff.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        guard let d = f.date(from: iso) ?? ff.date(from: iso) else { return String(iso.prefix(10)) }
         let out = DateFormatter()
         out.locale = Locale(identifier: "pt_BR")
         out.timeZone = TimeZone(identifier: "UTC")
@@ -1482,7 +1500,7 @@ public enum AuditReport {
             ("Servidor auditado", audit.host.hostname),
             ("Sistema", audit.os?.pretty ?? "—"),
             ("Data da coleta", humanDate(audit.collectedAt)),
-            ("Modo de coleta", audit.collector.mode == "admin" ? "Administrativo (completo)" : "Usuário (parcial)"),
+            ("Modo de coleta", modeLabel(audit.collector.mode)),
             ("Escopo", scope),
             ("Ferramenta", "\(audit.collector.name) \(audit.collector.version) (Uptend)"),
         ]
@@ -1786,5 +1804,15 @@ public enum AuditReport {
          .replacingOccurrences(of: "|", with: "\\|")
          .replacingOccurrences(of: "\n", with: " ")
          .replacingOccurrences(of: "\r", with: " ")
+    }
+
+    /// Cerca de código maior que qualquer sequência de crases do conteúdo — uma
+    /// evidência contendo ``` escaparia do bloco e injetaria Markdown no relatório.
+    static func mdFence(for raw: String) -> String {
+        var maxRun = 0, run = 0
+        for ch in raw {
+            if ch == "`" { run += 1; maxRun = max(maxRun, run) } else { run = 0 }
+        }
+        return String(repeating: "`", count: max(3, maxRun + 1))
     }
 }

@@ -98,13 +98,17 @@ public enum CVEMatcher {
     /// Trata `p` como separador (9.6p1 → 9.6.1) e letra final estilo OpenSSL (1.0.1f → 1.0.1.6).
     static func parse(_ version: String) -> [Int] {
         var v = version.lowercased().trimmingCharacters(in: .whitespaces)
-        v = v.replacingOccurrences(of: "p", with: ".")
+        // "p" só é separador quando está entre dígitos (9.6p1) — trocar todo "p"
+        // mutilaria sufixos como "-alpine".
+        v = v.replacingOccurrences(of: #"(?<=\d)p(?=\d)"#, with: ".", options: .regularExpression)
         var out: [Int] = []
         for part in v.split(separator: ".") {
             let digits = part.prefix { $0.isNumber }
             out.append(Int(digits) ?? 0)
-            // letra final (openssl): "1f" → componente extra a=1…z=26
-            if let last = part.last, last.isLetter, let sc = last.unicodeScalars.first {
+            // letra logo após os dígitos (openssl): "1f" ou "1g-r0" → a=1…z=26.
+            // Olhar o fim do segmento erraria em sufixos de pacote ("1g-r0" termina em "0").
+            let rest = part.dropFirst(digits.count)
+            if let c = rest.first, c.isLetter, c.isASCII, let sc = c.unicodeScalars.first {
                 out.append(Int(sc.value) - Int(Character("a").unicodeScalars.first!.value) + 1)
             }
         }

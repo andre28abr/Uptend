@@ -60,13 +60,10 @@ enum Shell {
                     return
                 }
 
-                if let inPipe, let stdin {
-                    let h = inPipe.fileHandleForWriting
-                    h.write(Data(stdin.utf8))
-                    try? h.close()
-                }
-
                 // Lê as duas saídas concorrentemente para não travar o buffer.
+                // Os leitores começam ANTES da escrita do stdin: se o filho encher
+                // o stdout enquanto o stdin ainda está sendo escrito, escrever
+                // primeiro bloquearia os dois lados (deadlock de pipe).
                 var outData = Data()
                 var errData = Data()
                 let group = DispatchGroup()
@@ -79,6 +76,15 @@ enum Shell {
                 DispatchQueue.global().async {
                     errData = errPipe.fileHandleForReading.readDataToEndOfFile()
                     group.leave()
+                }
+                if let inPipe, let stdin {
+                    group.enter()
+                    DispatchQueue.global().async {
+                        let h = inPipe.fileHandleForWriting
+                        h.write(Data(stdin.utf8))
+                        try? h.close()
+                        group.leave()
+                    }
                 }
                 process.waitUntilExit()
                 group.wait()

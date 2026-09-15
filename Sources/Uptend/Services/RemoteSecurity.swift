@@ -96,15 +96,18 @@ enum RemoteSecurity {
 
     // MARK: Auditoria Lynis
 
-    /// Instala o Lynis (se preciso) e roda a auditoria, gravando o relatório em /tmp.
+    /// Instala o Lynis (se preciso) e roda a auditoria. O relatório fica nos
+    /// caminhos padrão do Lynis em /var/log (gravável só por root) — em /tmp,
+    /// outro usuário local do servidor poderia plantar um symlink no caminho
+    /// previsível e fazer o root sobrescrever um arquivo arbitrário.
     static let auditArgs = ["bash", "-lc",
         "(command -v lynis >/dev/null || sudo -n apt-get install -y lynis >/dev/null 2>&1); " +
-        "sudo -n lynis audit system --quick --no-colors --report-file /tmp/uptend-lynis.dat --logfile /tmp/uptend-lynis.log"]
+        "sudo -n lynis audit system --quick --no-colors --report-file /var/log/uptend-lynis-report.dat --logfile /var/log/uptend-lynis.log"]
 
     /// Lê o relatório gravado (o Lynis grava como root → `sudo -n cat`) e reaproveita
     /// o parser do Mac.
     static func readAudit(_ host: RemoteHost) async -> (index: Int?, warnings: [LynisFinding], suggestions: [LynisFinding]) {
-        let r = await SSHRunner.run(host, ["sudo", "-n", "cat", "/tmp/uptend-lynis.dat"])
+        let r = await SSHRunner.run(host, ["sudo", "-n", "cat", "/var/log/uptend-lynis-report.dat"])
         return AuditService.parseReport(r.stdout)
     }
 }
