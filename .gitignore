@@ -10,3 +10,6 @@ build/
 *.xcuserstate
 xcuserdata/
 .swiftpm/
+
+# Claude Code (configuração local da máquina)
+.claude/settings.local.json
