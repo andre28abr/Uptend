@@ -64,6 +64,19 @@ struct HardeningPlaybookTests {
         #expect(rocky.contains("família dnf"))
     }
 
+    @Test func hostnameNewlineCannotInjectCommands() {
+        // Regressão: hostname/SO vêm do JSON do coletor (tratado como adversarial);
+        // uma quebra de linha no cabeçalho viraria linha EXECUTÁVEL no script.
+        let evil = ExternalAudit(schemaVersion: 1, collector: .init(name: "x", version: "1", mode: "admin"),
+            collectedAt: "2026-07-22T00:00:00Z",
+            host: .init(hostname: "srv\nrm -rf /importante", machineId: nil),
+            machine: nil, os: nil, disks: [], resources: nil, users: nil, docker: nil, profile: nil,
+            findings: [f("ssh-root-login", .high)], lynis: nil)
+        let s = HardeningPlaybook.generate(for: evil)
+        #expect(s.contains("\nrm -rf /importante") == false)
+        #expect(s.contains("srv rm -rf /importante"))   // achatado num comentário, inofensivo
+    }
+
     @Test func reportIsSelfContained() {
         let html = AuditReport.playbookHTML(audit([f("ssh-root-login", .high)]))
         #expect(html.contains("Playbook de Hardening"))

@@ -17,6 +17,14 @@ struct CVETests {
         #expect(CVEMatcher.parse("2.4.52") == [2, 4, 52])
     }
 
+    @Test func parseKeepsLetterDespitePackageSuffix() {
+        // Regressão: "1.0.1g-r0" (tag de pacote/imagem) perdia a letra e casava
+        // como vulnerável ao Heartbleed mesmo sendo a versão corrigida.
+        #expect(CVEMatcher.parse("1.0.1g-r0") == [1, 0, 1, 7])
+        #expect(CVEMatcher.parse("9.6p1-alpine") == [9, 6, 1])   // "-alpine" não vira componente
+        #expect(CVEMatcher.inRange("1.0.1g-r0", CVE.Range("1.0.1", "1.0.1g")) == false)
+    }
+
     @Test func compareOrdersCorrectly() {
         #expect(CVEMatcher.compare(CVEMatcher.parse("9.6p1"), CVEMatcher.parse("9.8p1")) == -1)
         #expect(CVEMatcher.compare(CVEMatcher.parse("1.0.1g"), CVEMatcher.parse("1.0.1f")) == 1)

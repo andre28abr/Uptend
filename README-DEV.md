@@ -1,15 +1,17 @@
-# Uptend — protótipo de interface
+# Uptend — guia de desenvolvimento
 
-Prévia da interface gráfica (SwiftUI), com **dados de exemplo (mock)**. Serve só para avaliar o UX. Ainda não faz nada real — nenhum comando de shell é executado.
+Notas para compilar, testar e navegar o código. A visão geral do produto está no [README.md](README.md).
 
 ## Como rodar
 
 ### Opção 1 — script (duplo-clique no .app)
 ```bash
-./build-app.sh          # compila em release e abre o Uptend.app
-./build-app.sh --debug  # compila mais rápido (debug)
+./build-app.sh            # compila em release e abre o Uptend.app
+./build-app.sh --debug    # compila mais rápido (debug)
+./build-app.sh --install  # compila e atualiza /Applications/Uptend.app
 ```
-Gera `build/Uptend.app`. Não é DMG — é só o app local.
+Gera `build/Uptend.app` (saída de compilação). O app "instalado" mora em
+`/Applications` — use `--install` para atualizá-lo. Não é DMG — é só o app local.
 
 ### Opção 2 — Xcode
 Abra `Package.swift` no Xcode e rode com Cmd+R.
@@ -30,10 +32,13 @@ Antes de considerar qualquer coisa pronta, seguir o `../PADROES.md` (qualidade, 
 ## Estrutura
 
 ```
+Sources/UptendCore/   Lógica pura, sem SwiftUI/AppKit (relatórios, parsers, auditoria) — testável isolada
 Sources/Uptend/
   App/        UptendApp (entrada), AppState (estado global)
   Model/      Category (categorias + subseções), Models, MockData
+  Services/   Integrações reais (Homebrew, Git/GitHub, Docker, ssh, scanners…)
   Views/      RootView (layout 3 colunas), Components, e uma view por categoria
+Tests/UptendTests/    Suíte de testes (Swift Testing)
 ```
 
 O layout é um `NavigationSplitView` de 3 colunas: categorias | subseções | conteúdo.
@@ -44,7 +49,7 @@ O layout é um `NavigationSplitView` de 3 colunas: categorias | subseções | co
 - Tema claro/escuro (Configurações > Geral, ou acompanha o sistema).
 - Listas, poucas animações, cara de Mac nativo.
 
-## Próximos passos
-- Ajustar o UX conforme feedback.
-- Ligar cada categoria à lógica real (Homebrew, Docker, Git, limpeza…).
-- Só no fim: empacotar em DMG.
+## Empacotamento
+```bash
+./make-dmg.sh   # gera build/Uptend.dmg (assinatura ad-hoc; ver README.md para notarização)
+```

@@ -1,7 +1,8 @@
 import AppKit
 
 // Gera os PNGs do ícone do Uptend num .iconset (depois vira .icns via iconutil).
-// Marca: martelo (SF Symbol) sobre um squircle azul.
+// Marca: seta para cima até uma linha (SF Symbol arrow.up.to.line — "manter em
+// dia") em branco sobre um squircle azul.
 
 let outDir = CommandLine.arguments.count > 1 ? CommandLine.arguments[1] : "./Uptend.iconset"
 try? FileManager.default.createDirectory(atPath: outDir, withIntermediateDirectories: true)
@@ -39,12 +40,11 @@ func makePNG(_ size: CGFloat) -> Data? {
     ])!
     gradient.draw(in: path, angle: -90)
 
-    // Martelo, em tom escuro (como na referência).
-    let hammer = symbolImage("hammer.fill", pointSize: size * 0.46,
-                             color: NSColor(red: 0.11, green: 0.13, blue: 0.20, alpha: 1))
-    let hs = hammer.size
+    // Marca em branco, centralizada.
+    let mark = symbolImage("arrow.up.to.line", pointSize: size * 0.44, color: .white)
+    let hs = mark.size
     let drawRect = NSRect(x: (size - hs.width) / 2, y: (size - hs.height) / 2, width: hs.width, height: hs.height)
-    hammer.draw(in: drawRect)
+    mark.draw(in: drawRect)
 
     NSGraphicsContext.restoreGraphicsState()
     return rep.representation(using: .png, properties: [:])

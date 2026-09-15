@@ -56,8 +56,14 @@ public enum AttackSurfaceMap {
         // Portas: extrai números do achado de portas expostas (+ SSH, sempre).
         var ports = Set<Int>([22])
         for f in audit.findings where ComplianceMap.baseKey(f.id) == "exposed-ports" {
-            for n in (f.evidence ?? "").split(whereSeparator: { !$0.isNumber }).compactMap({ Int($0) })
-                where (1...65535).contains(n) { ports.insert(n) }
+            // Só tokens que SÃO uma porta: "80" ou "addr:8080". Capturar qualquer
+            // sequência de dígitos fragmentaria um IP (192.168.1.10 → 4 "portas").
+            for tok in (f.evidence ?? "").split(whereSeparator: { " ,\n\t".contains($0) }) {
+                let cand = tok.contains(":") ? (tok.split(separator: ":").last ?? "") : tok
+                if cand.allSatisfy(\.isNumber), let n = Int(cand), (1...65535).contains(n) {
+                    ports.insert(n)
+                }
+            }
         }
         // TLS fraco/expirado detectado em qualquer serviço?
         let weakTLS = audit.findings.contains { $0.severity > .ok && ($0.id.hasPrefix("tls") || $0.id.hasPrefix("cert-tls")) }

@@ -44,8 +44,11 @@ public enum AuditDashboard {
                 "eol": audit.os?.eolDate as Any? ?? NSNull(),
             ])
         }
-        let json = (try? JSONSerialization.data(withJSONObject: items, options: [.sortedKeys]))
+        var json = (try? JSONSerialization.data(withJSONObject: items, options: [.sortedKeys]))
             .map { String(decoding: $0, as: UTF8.self) } ?? "[]"
+        // O JSON vai dentro de <script>: um dado contendo "</script>" encerraria o
+        // bloco e injetaria HTML/JS na página. Escapamos "<" no estilo unicode do JSON.
+        json = json.replacingOccurrences(of: "<", with: "\\u003c")
         return page(dataJSON: json)
     }
 

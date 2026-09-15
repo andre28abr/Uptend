@@ -37,6 +37,19 @@ struct AuditDashboardTests {
         #expect(obj?.first?["score"] is Int)
     }
 
+    @Test func escapesScriptCloserInData() {
+        // Regressão: um dado contendo "</script>" encerrava o bloco <script> do
+        // dashboard e injetava HTML/JS vivo na página (o esc() do JS roda tarde
+        // demais — o parser de HTML age antes).
+        let evil = ExternalAudit(schemaVersion: 1, collector: .init(name: "x", version: "1", mode: "admin"),
+            collectedAt: "2026-07-22T00:00:00Z",
+            host: .init(hostname: "srv</script><script>alert(1)", machineId: nil),
+            machine: nil, os: nil, disks: [], resources: nil, users: nil, docker: nil, profile: nil,
+            findings: [], lynis: nil)
+        let html = AuditDashboard.html([evil])
+        #expect(html.contains("</script><script>alert(1)") == false)
+    }
+
     @Test func handlesEmptyHistory() {
         let html = AuditDashboard.html([])
         #expect(html.contains("const DATA = []"))

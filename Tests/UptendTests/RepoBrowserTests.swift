@@ -87,6 +87,14 @@ struct RepoBrowserTests {
         #expect(blocks == [.table(headers: ["A", "B"], rows: [["1", "2"], ["3", "4"]])])
     }
 
+    @Test func paragraphBeforeRuleIsNotATable() {
+        // Regressão: "texto com |" seguido de "---" virava tabela (o separador
+        // deve ter o MESMO número de células que o cabeçalho, como no GFM).
+        let blocks = MarkdownParser.parse("use a | b\n---")
+        #expect(blocks.contains(.rule))
+        #expect(!blocks.contains { if case .table = $0 { return true } else { return false } })
+    }
+
     @Test func orderedPrefixDetection() {
         #expect(MarkdownParser.orderedPrefix("1. item") == 3)
         #expect(MarkdownParser.orderedPrefix("12) item") == 4)

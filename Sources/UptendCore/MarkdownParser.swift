@@ -84,8 +84,10 @@ public enum MarkdownParser {
                 blocks.append(.image(alt: img.alt, path: img.path)); i += 1; continue
             }
 
-            // Tabela (linha com | seguida de linha separadora)
-            if trimmed.contains("|"), i + 1 < lines.count, isTableSeparator(lines[i + 1]) {
+            // Tabela (linha com | seguida de linha separadora com o MESMO número de
+            // células — como no GFM; senão "parágrafo com |" + "---" viraria tabela)
+            if trimmed.contains("|"), i + 1 < lines.count, isTableSeparator(lines[i + 1]),
+               splitRow(lines[i + 1]).count == splitRow(line).count {
                 let headers = splitRow(line)
                 var rows: [[String]] = []
                 i += 2

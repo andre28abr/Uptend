@@ -39,8 +39,8 @@ public enum HardeningPlaybook {
         var s = """
         #!/usr/bin/env bash
         # =============================================================================
-        # Playbook de hardening gerado pelo Uptend — host: \(audit.host.hostname)
-        # SO auditado: \(osLabel) — \(famLabel)
+        # Playbook de hardening gerado pelo Uptend — host: \(shComment(audit.host.hostname))
+        # SO auditado: \(shComment(osLabel)) — \(famLabel)
         # REVISE antes de rodar. Rode em janela de manutenção, com acesso alternativo
         # ao servidor (o hardening de SSH pode derrubar sua sessão se algo der errado).
         #
@@ -85,7 +85,7 @@ public enum HardeningPlaybook {
 
         s += "\nreload_all\n"
         s += "echo\n"
-        s += "echo 'Concluído. Teste os serviços. Para desfazer tudo: sudo bash \\$0 rollback'\n"
+        s += "echo \"Concluído. Teste os serviços. Para desfazer tudo: sudo bash $0 rollback\"\n"
 
         if !manual.isEmpty {
             s += "\n# =============================================================================\n"
@@ -98,12 +98,16 @@ public enum HardeningPlaybook {
         return s
     }
 
-    // Sanitiza texto para dentro de um echo '...' (troca aspas simples).
+    // Sanitiza texto para dentro de um echo '...' (troca aspas simples e achata linhas).
     private static func shSingleComment(_ t: String) -> String {
-        t.replacingOccurrences(of: "'", with: "’")
+        shComment(t).replacingOccurrences(of: "'", with: "’")
     }
+    // Sanitiza texto para comentário/cabeçalho: uma quebra de linha aqui viraria
+    // uma linha executável no script gerado.
     private static func shComment(_ t: String) -> String {
-        t.replacingOccurrences(of: "\n", with: " ")
+        t.replacingOccurrences(of: "\r\n", with: " ")
+         .replacingOccurrences(of: "\n", with: " ")
+         .replacingOccurrences(of: "\r", with: " ")
     }
 
     /// Contagem de correções automáticas (para a UI).

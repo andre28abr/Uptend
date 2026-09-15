@@ -41,6 +41,14 @@ struct AttackSurfaceTests {
         #expect(e443?.tls == "TLS fraco")
     }
 
+    @Test func ipsInEvidenceAreNotPorts() {
+        // Regressão: capturar qualquer sequência de dígitos fragmentava um IP
+        // (192.168.1.10 virava as "portas" 192, 168, 1 e 10).
+        let s = AttackSurfaceMap.from(audit([
+            f("exposed-ports", .medium, evidence: "192.168.1.10:8080 aberta e 0.0.0.0:3306")]))
+        #expect(s.entries.map(\.port).sorted() == [22, 3306, 8080])
+    }
+
     @Test func svgAndReportSelfContained() {
         let s = AttackSurfaceMap.from(audit([f("exposed-ports", .medium, evidence: "22 80 443")]))
         let svg = AttackSurfaceMap.svg(s)
