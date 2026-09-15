@@ -27,7 +27,7 @@ swift run
 ```
 
 ## Padrões
-Antes de considerar qualquer coisa pronta, seguir o `../PADROES.md` (qualidade, testes, Security by Design, Privacy by Design, Definition of Done).
+Antes de considerar qualquer coisa pronta, seguir o `docs/PADROES.md` (qualidade, testes, Security by Design, Privacy by Design, Definition of Done).
 
 ## Estrutura
 
