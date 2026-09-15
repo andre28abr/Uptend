@@ -11,7 +11,6 @@
 ![LGPD](https://img.shields.io/badge/LGPD-lens-10b981)
 ![Homebrew](https://img.shields.io/badge/Homebrew-brew%20install%20----cask%20uptend-FBB040?logo=homebrew&logoColor=black)
 ![License](https://img.shields.io/badge/license-AGPL--3.0-orange)
-[![Baixar](https://img.shields.io/badge/baixar-Uptend.dmg-1D9E75?logo=apple&logoColor=white)](https://github.com/andre28abr/Uptend/releases/latest)
 
 ---
 
