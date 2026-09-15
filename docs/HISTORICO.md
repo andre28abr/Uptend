@@ -1920,3 +1920,12 @@ do ClamAV fechada · `ForEach id:\.self` sobre listas com possíveis duplicatas 
 **Testes novos:** CryptoTools, Keychain (round-trip), AuditSigner (chave trocada/base64 malformado/
 estabilidade), UptendVault (injeção-como-literal/blob binário), validadores (database/jumpHost),
 RemoteHost (limpeza de credencial), + regressões dos altos/médios.
+
+## 2026-09-15 — Publicação no GitHub e reorganização do repositório
+
+**O que foi feito:**
+- Lote de hardening de julho (coletor remoto, relatórios, playbook, ícone Liquid Glass) commitado e mesclado na `main`; branch `audit-fixes-2026-07` encerrada.
+- Documentação de planejamento (este histórico, decisões, roadmap, padrões, HomeLab, Auditoria Externa, plano PRO, brainstorm) e o `lab/` passaram a viver dentro do repositório, em `docs/` e `lab/`. `Package.swift` na raiz.
+- README no padrão dos outros projetos do autor (badges, bloco do autor, sumário, métricas), `AUTHOR.md`, `CLAUDE.md` e CI no GitHub Actions (runner macOS: build com 0 warnings + 428 testes).
+- Build limpo também no Xcode 16 do CI: `ProbeBox` no probe TLS (sem `var` capturada mutada), TLS 1.0/1.1 via raw value (símbolos depreciados), resultado descartado no vault.
+- Repositório público: https://github.com/andre28abr/Uptend · tag `v0.1.0`.
