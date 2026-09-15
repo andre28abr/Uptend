@@ -58,7 +58,7 @@ enum TLSScanner {
         guard r.reachable else { r.note = "Sem resposta (porta fechada/filtrada ou host inacessível)."; return r }
         if !r.speaksTLS {
             // conectou TCP mas não fez TLS moderno — pode ser texto puro ou só TLS legado
-            let legacy = await handshake(host: host, port: port, minVersion: .TLSv10, maxVersion: .TLSv13, timeoutMs: timeoutMs)
+            let legacy = await handshake(host: host, port: port, minVersion: legacyTLS10, maxVersion: .TLSv13, timeoutMs: timeoutMs)
             if legacy.speaksTLS {
                 r = legacy
                 r.acceptsLegacy = true
@@ -69,7 +69,7 @@ enum TLSScanner {
             }
         } else {
             // fala TLS moderno; testa se TAMBÉM aceita legado
-            let legacy = await handshake(host: host, port: port, minVersion: .TLSv10, maxVersion: .TLSv11, timeoutMs: timeoutMs)
+            let legacy = await handshake(host: host, port: port, minVersion: legacyTLS10, maxVersion: legacyTLS11, timeoutMs: timeoutMs)
             if legacy.speaksTLS {
                 r.acceptsLegacy = true
                 r.issues.append("Aceita TLS 1.0/1.1 (obsoleto)")
@@ -136,6 +136,12 @@ enum TLSScanner {
                                 recommendation: recommendation, businessImpact: impact)
         }
     }
+
+    // TLS 1.0/1.1 são sondados DE PROPÓSITO (achado "aceita TLS legado"). Os símbolos
+    // `.TLSv10`/`.TLSv11` estão depreciados; os valores de protocolo (RFC 2246/4346) não
+    // mudam, então usamos o raw value — a inicialização não falha para constantes válidas.
+    private static let legacyTLS10 = tls_protocol_version_t(rawValue: 0x0301)!  // TLS 1.0
+    private static let legacyTLS11 = tls_protocol_version_t(rawValue: 0x0302)!  // TLS 1.1
 
     private static func handshake(host: String, port: Int,
                                   minVersion: tls_protocol_version_t, maxVersion: tls_protocol_version_t,

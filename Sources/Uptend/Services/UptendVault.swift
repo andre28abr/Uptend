@@ -124,7 +124,7 @@ final class UptendVault: ObservableObject {
         sqlite3_bind_double(stmt, 5, createdAt.timeIntervalSince1970)
         sqlite3_bind_double(stmt, 6, importedAt.timeIntervalSince1970)
         sqlite3_bind_int64(stmt, 7, Int64(payload.count))
-        payload.withUnsafeBytes { raw in
+        _ = payload.withUnsafeBytes { raw in
             sqlite3_bind_blob(stmt, 8, raw.baseAddress, Int32(payload.count), SQLITE_TRANSIENT)
         }
         guard sqlite3_step(stmt) == SQLITE_DONE else { return false }
