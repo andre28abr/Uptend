@@ -1929,3 +1929,12 @@ RemoteHost (limpeza de credencial), + regressões dos altos/médios.
 - README no padrão dos outros projetos do autor (badges, bloco do autor, sumário, métricas), `AUTHOR.md`, `CLAUDE.md` e CI no GitHub Actions (runner macOS: build com 0 warnings + 428 testes).
 - Build limpo também no Xcode 16 do CI: `ProbeBox` no probe TLS (sem `var` capturada mutada), TLS 1.0/1.1 via raw value (símbolos depreciados), resultado descartado no vault.
 - Repositório público: https://github.com/andre28abr/Uptend · tag `v0.1.0`.
+
+## 2026-09-15 — Release v0.1.0 e cask no Homebrew
+
+**O que foi feito:**
+- `Uptend.dmg` gerado com `make-dmg.sh` (release, assinatura ad-hoc) e publicado na release `v0.1.0` do GitHub.
+- Tap próprio `andre28abr/homebrew-uptend` com `Casks/uptend.rb`: versão 0.1.0, sha256 do dmg, `depends_on macos: :sonoma` e `arch: :arm64`, `zap` das preferências e do `Application Support/Uptend`.
+- Instalação testada: `brew tap andre28abr/uptend && brew install --cask uptend`.
+- `CFBundleShortVersionString` alinhado ao SemVer (`0.1.0`).
+- README com a seção de instalação pelo Homebrew; roadmap da Etapa 7 atualizado. Fica pendente apenas a assinatura Developer ID com notarização.

@@ -74,7 +74,7 @@ cat > "${APP_DIR}/Contents/Info.plist" <<PLIST
     <key>CFBundleIconFile</key><string>${APP_NAME}</string>
 $( [[ "${ICON_ASSETS}" == "1" ]] && printf '    <key>CFBundleIconName</key><string>%s</string>' "${APP_NAME}" )
     <key>CFBundlePackageType</key><string>APPL</string>
-    <key>CFBundleShortVersionString</key><string>0.1</string>
+    <key>CFBundleShortVersionString</key><string>0.1.0</string>
     <key>CFBundleVersion</key><string>1</string>
     <key>LSMinimumSystemVersion</key><string>14.0</string>
     <key>NSHighResolutionCapable</key><true/>

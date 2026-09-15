@@ -108,10 +108,10 @@ Nova categoria **Setup** (Primeira vez, Perfis, Dotfiles) + Atividade no Início
 - [x] Ícone e identidade final
 - [x] Empacotar DMG (`make-dmg.sh` → build/Uptend.dmg, via hdiutil)
 - [x] README público + licença (MIT) + `.gitignore`
-- [x] Repositório git local inicializado (commit inicial) — **push pendente (usuário)**
+- [x] Repositório público no GitHub (set/2026), tag `v0.1.0` e release com `Uptend.dmg`
 - [ ] Assinatura Developer ID + notarização na Apple (exige conta paga do usuário)
-- [ ] Publicar como cask do Homebrew (tap próprio) com sha256
-- [ ] Versionamento SemVer + changelog
+- [x] Publicado como cask do Homebrew: tap `andre28abr/uptend`, `Casks/uptend.rb` com sha256 do dmg da release (set/2026)
+- [x] Versionamento SemVer (v0.1.0); changelog vive em `docs/HISTORICO.md`
 
 ---
 
