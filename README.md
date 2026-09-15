@@ -15,11 +15,11 @@
 
 ## 👤 Autor
 
-**André Augusto Azarias De Souza** — DPO / Encarregado de Dados · Compliance & GRC · Privacy Engineering
+**André Augusto Azarias de Souza** · DPO / Encarregado de Dados · Compliance & GRC · Privacy Engineering
 
-Profissional com mais de 18 anos de experiência em **gestão administrativa, compliance, governança da informação e proteção de dados pessoais**, com formação dupla em **Direito (Anhanguera)** e **Análise e Desenvolvimento de Sistemas (Mackenzie)**. Atuou por quase duas décadas como **Gerente Administrativo e Encarregado de Dados (DPO)** em organização do setor de saúde suplementar, com foco em adequação à LGPD, governança documental e interface com áreas técnicas.
+Gestor com **18 anos de atuação como Gerente Administrativo e Encarregado de Dados (DPO)** em organização do setor de saúde suplementar, ambiente regulado pela ANS e pela LGPD. Participou de decisões de diretoria, conduziu a relação com hospitais e operadoras, liderou a modernização dos sistemas administrativos e de segurança da informação e coordenou o programa de adequação à LGPD da organização, com dados sensíveis de saúde sob o Art. 11.
 
-Atualmente em **transição de carreira, com disponibilidade imediata**, o Uptend foi conduzido como **product owner técnico, com auxílio de assistentes de IA generativa para a etapa de codificação** — começou como o app pessoal de "reinstalar o Mac" e cresceu para um auditor de servidores que traduz achados técnicos em **risco de negócio, conformidade e plano de correção**, demonstrando fluência técnica suficiente para dialogar com times de engenharia, segurança e operações.
+Desde 2025 conduz, como **product owner técnico**, projetos open-source de segurança e privacidade em Python, Go, Rust e Swift, com a codificação orquestrada por assistentes de IA generativa sob sua direção e revisão. O Uptend seguiu esse modelo: começou como o app pessoal de "reinstalar o Mac" e cresceu para um auditor de servidores que traduz achados técnicos em **risco de negócio, conformidade e plano de correção**. Também desenvolve **automações de processos com n8n** e é autor de cinco livros publicados, entre eles *Da Norma à Liderança*, sobre atualização profissional em GRC.
 
 → **[Bio completa: AUTHOR.md](AUTHOR.md)** · [LinkedIn](https://linkedin.com/in/andreaugusto-azariasdesouza) · [GitHub Profile](https://github.com/andre28abr)
 
@@ -30,7 +30,7 @@ Atualmente em **transição de carreira, com disponibilidade imediata**, o Upten
 - **[Plataforma LGPD](https://github.com/andre28abr/lgpd-platform)** *(público)* — plataforma web multi-tenant que treina, avalia e certifica os setores de uma empresa em LGPD e dá ao DPO as ferramentas de operação.
 - **[Peapod](https://github.com/andre28abr/Peapod)** *(público)* — sandboxes isolados e descartáveis para agentes de IA (MCP, CLI, dashboard e app macOS).
 - **[banana](https://github.com/andre28abr/banana)** *(público)* — editor local-first de notas Markdown com vault cifrado (Tauri 2 + Rust + Svelte 5).
-- **SC Platform** *(privado, sob NDA — disponível para apresentação em entrevistas)* — SaaS multi-tenant de gestão de licitações públicas. ~75k linhas, 547 testes.
+- **SC Platform** *(privado, disponível para apresentação mediante solicitação)* — SaaS multi-tenant de gestão de licitações públicas. ~75k linhas, 547 testes.
 
 ---
 
