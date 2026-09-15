@@ -158,7 +158,17 @@ Decisões que valem registrar (detalhes em [docs/DECISOES.md](docs/DECISOES.md))
 
 ## Como rodar
 
-Requisitos: **macOS 14+** e **Xcode 16+** (Swift 6 e Swift Testing). Homebrew é recomendado para as funções de instalação.
+**Instalar pelo Homebrew** (macOS 14+, Apple Silicon):
+
+```bash
+brew tap andre28abr/uptend
+brew trust andre28abr/uptend   # Homebrew 6+: confiar no tap (uma vez)
+brew install --cask uptend
+```
+
+Ou baixe o **[Uptend.dmg](https://github.com/andre28abr/Uptend/releases/latest)** e arraste o app para *Aplicativos*. O app é assinado ad-hoc (não notarizado pela Apple): na primeira abertura, clique com o botão direito e escolha **Abrir**. Tap: [andre28abr/homebrew-uptend](https://github.com/andre28abr/homebrew-uptend).
+
+**Compilar do código.** Requisitos: **macOS 14+** e **Xcode 16+** (Swift 6 e Swift Testing). Homebrew é recomendado para as funções de instalação.
 
 ```bash
 ./build-app.sh              # compila em release e abre build/Uptend.app
@@ -209,8 +219,8 @@ O CI (GitHub Actions, macOS) compila e roda a suíte a cada push. Padrões de en
 
 ## Roadmap
 
-- **Concluído (jul/2026):** todas as categorias do Mac ligadas à lógica real; HomeLab (hosts remotos por SSH: Docker, discos, arquivos, rede, segurança, terminal, backup, deploy); Auditoria Externa completa (coletor, painel, relatórios, CVE, MITRE, detecção, deriva, frota, exceções, LGPD, playbook); auditoria de segurança de ponta a ponta; ícone Liquid Glass.
-- **Próximos passos** ([docs/ROADMAP.md](docs/ROADMAP.md) e [docs/PLANO-AUDITORIA-PRO.md](docs/PLANO-AUDITORIA-PRO.md)): assinatura com Developer ID e notarização; publicação como cask do Homebrew; itens do plano de profissionalização da auditoria (nível empresarial).
+- **Concluído (jul/2026):** todas as categorias do Mac ligadas à lógica real; HomeLab (hosts remotos por SSH: Docker, discos, arquivos, rede, segurança, terminal, backup, deploy); Auditoria Externa completa (coletor, painel, relatórios, CVE, MITRE, detecção, deriva, frota, exceções, LGPD, playbook); auditoria de segurança de ponta a ponta; ícone Liquid Glass. **Set/2026:** release v0.1.0 no GitHub e cask no Homebrew (`brew install --cask uptend`).
+- **Próximos passos** ([docs/ROADMAP.md](docs/ROADMAP.md) e [docs/PLANO-AUDITORIA-PRO.md](docs/PLANO-AUDITORIA-PRO.md)): assinatura com Developer ID e notarização; itens do plano de profissionalização da auditoria (nível empresarial).
 
 ---
 
