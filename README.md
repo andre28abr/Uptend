@@ -59,7 +59,8 @@ Todos os projetos, com o porquê de cada um, no perfil [github.com/andre28abr](h
 10. [Métricas do código](#métricas-do-código)
 11. [Roadmap](#roadmap)
 12. [Documentação interna](#documentação-interna)
-13. [Licença](#licença)
+13. [Contribuições](#contribuições)
+14. [Licença](#licença)
 
 ---
 
@@ -247,6 +248,12 @@ O CI (GitHub Actions, macOS) compila e roda a suíte a cada push. Padrões de en
 | [docs/HOMELAB.md](docs/HOMELAB.md) | Design do módulo HomeLab |
 | [docs/BRAINSTORM.md](docs/BRAINSTORM.md) | Ideias soltas |
 | [README-DEV.md](README-DEV.md) | Compilar, testar, navegar o código |
+
+---
+
+## Contribuições
+
+Obrigado pelo interesse! Este é um projeto pessoal, mantido por uma pessoa só, e por isso não consigo revisar nem acompanhar contribuições de fora. Pedidos de alteração (pull requests) serão fechados sem análise, sem nenhuma desconsideração por quem enviou. Se quiser adaptar o projeto às suas necessidades, fique à vontade para fazer um fork, dentro dos termos da licença.
 
 ---
 
