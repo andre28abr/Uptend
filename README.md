@@ -261,7 +261,7 @@ Obrigado pelo interesse! Este é um projeto pessoal, mantido por uma pessoa só,
 
 **GNU Affero General Public License v3.0** — veja [LICENSE](LICENSE). Você é livre para usar, estudar, modificar e redistribuir; se modificar e distribuir, inclusive como serviço em rede, precisa disponibilizar o código sob a mesma licença.
 
-**Licenciamento comercial / dual license.** O autor mantém o copyright e pode oferecer o código sob outras licenças (por exemplo, compatível com a Apple App Store, que é incompatível com a AGPL). Contribuições de terceiros só serão aceitas mediante acordo (CLA/DCO) que preserve essa possibilidade.
+**Licenciamento comercial / dual license.** O autor mantém o copyright e pode oferecer o código sob outras licenças (por exemplo, compatível com a Apple App Store, que é incompatível com a AGPL). Como o projeto não aceita contribuições de terceiros (veja [Contribuições](#contribuições)), o copyright continua inteiro com o autor, o que preserva essa possibilidade.
 
 ---
 
