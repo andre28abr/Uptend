@@ -1938,3 +1938,14 @@ RemoteHost (limpeza de credencial), + regressões dos altos/médios.
 - Instalação testada: `brew tap andre28abr/uptend && brew install --cask uptend`.
 - `CFBundleShortVersionString` alinhado ao SemVer (`0.1.0`).
 - README com a seção de instalação pelo Homebrew; roadmap da Etapa 7 atualizado. Fica pendente apenas a assinatura Developer ID com notarização.
+
+## 2026-11-09: histórico dos repositórios públicos reescrito (privacidade)
+
+**O que foi feito:**
+- O e-mail pessoal (Gmail) e o e-mail local da máquina apareciam como autor/committer nos commits de todos os
+  repositórios públicos do autor. Com `git filter-repo` (mailmap) em espelho, todos os commits dos 11 repositórios
+  públicos passaram a usar `147832771+andre28abr@users.noreply.github.com`, inclusive aqui no Uptend.
+- Consequência técnica: todos os hashes de commit e a tag `v0.1.0` mudaram (main `1959daa` virou `378b5c8`);
+  o conteúdo dos arquivos ficou byte a byte idêntico. Releases e o `Uptend.dmg` anexado não foram afetados.
+- Clone local realinhado (`fetch` + `reset --hard origin/main`). Identidade global do git já estava no noreply,
+  então commits novos não reexpõem o e-mail.
